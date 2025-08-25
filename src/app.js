@@ -17,26 +17,30 @@ app.post("/register", async (req, res) => {
     const { username, email, password } = req.body;
     const newUser = new User({ username, email, password });
     await newUser.save();
-    res.send("User registered successfully");
+    res.status(201).json({message: "User registered successfully"});
   } catch (error) {
     console.error("Error registering user:", error);
     if (error.code === 11000) {
-      return res.status(400).send("Email already exists");
+      return res.status(400).json({message: "Email already exists"});
     }
-    return res.status(500).send("Internal Server Error");
+    return res.status(500).json({message: "Internal Server Error"});
   }
 });
+
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log("Login attempt:", req.body);
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).send("Invalid email or password");
+      return res.status(400).json({message: "Invalid email or password"});
     }
     const isMatch = await user.comparePassword(password);
+    console.log("password", res);
     if (!isMatch) {
-      return res.status(400).send("Invalid email or password");
+      return res.status(400).json({message: "Invalid email or password"});
     }
+
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET || "default_secret",
@@ -44,26 +48,20 @@ app.post("/login", async (req, res) => {
         expiresIn: "1h",
       }
     );
-    res.cookie("token", token, { httpOnly: true }).send("Login successful");
-
-    // res.send({ message: "Login successful", token });
+    res.cookie("token", token, { httpOnly: true }).json({message: "Login successful"});
   } catch (error) {
     console.error("Error logging in user:", error);
-    return res.status(500).send("Internal Server Error");
+    return res.status(500).json({message: "Internal Server Error"});
   }
 });
+
 app.get("/allUser", authMiddleware, async (req, res) => {
   try {
     const users = await User.find({});
     res.send(users);
   } catch (error) {
     console.error("Error fetching profile:", error);
-    return res.status(500).send("Internal Server Error");
+    return res.status(500).json({message: "Internal Server Error"});
   }
-  // try {
-  //   res
-  // } catch (error) {
-
-  // }
 });
 module.exports = app;
