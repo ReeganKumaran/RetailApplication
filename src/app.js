@@ -12,7 +12,8 @@ app.get("/", (req, res) => {
   res.send("Welcome to the Retail Application");
 });
 
-app.post("/register", async (req, res) => {
+app.post("/signup", async (req, res) => {
+  console.log("Sign up attempted", req.body);
   try {
     const { username, email, password } = req.body;
     const newUser = new User({ username, email, password });
@@ -36,7 +37,6 @@ app.post("/login", async (req, res) => {
       return res.status(400).json({message: "Invalid email or password"});
     }
     const isMatch = await user.comparePassword(password);
-    console.log("password", res);
     if (!isMatch) {
       return res.status(400).json({message: "Invalid email or password"});
     }
@@ -48,7 +48,7 @@ app.post("/login", async (req, res) => {
         expiresIn: "1h",
       }
     );
-    res.cookie("token", token, { httpOnly: true }).json({message: "Login successful"});
+    res.cookie("token", token, { httpOnly: true }).json({username: user.username, message: "Login successful"});
   } catch (error) {
     console.error("Error logging in user:", error);
     return res.status(500).json({message: "Internal Server Error"});
