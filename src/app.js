@@ -4,6 +4,7 @@ const app = express();
 const authMiddleware = require("./middlewares/authMiddleware");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const Client = require("./models/clientsModel");
 
 app.use(cookieParser());
 app.use(express.json());
@@ -18,13 +19,13 @@ app.post("/signup", async (req, res) => {
     const { username, email, password } = req.body;
     const newUser = new User({ username, email, password });
     await newUser.save();
-    res.status(201).json({message: "User registered successfully"});
+    res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
     console.error("Error registering user:", error);
     if (error.code === 11000) {
-      return res.status(400).json({message: "Email already exists"});
+      return res.status(400).json({ message: "Email already exists" });
     }
-    return res.status(500).json({message: "Internal Server Error"});
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
@@ -34,11 +35,11 @@ app.post("/login", async (req, res) => {
     console.log("Login attempt:", req.body);
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({message: "Invalid email or password"});
+      return res.status(400).json({ message: "Invalid email or password" });
     }
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({message: "Invalid email or password"});
+      return res.status(400).json({ message: "Invalid email or password" });
     }
 
     const token = jwt.sign(
@@ -48,10 +49,12 @@ app.post("/login", async (req, res) => {
         expiresIn: "1h",
       }
     );
-    res.cookie("token", token, { httpOnly: true }).json({username: user.username, message: "Login successful"});
+    res
+      .cookie("token", token, { httpOnly: true })
+      .json({ username: user.username, message: "Login successful", token});
   } catch (error) {
     console.error("Error logging in user:", error);
-    return res.status(500).json({message: "Internal Server Error"});
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
@@ -61,7 +64,22 @@ app.get("/allUser", authMiddleware, async (req, res) => {
     res.send(users);
   } catch (error) {
     console.error("Error fetching profile:", error);
-    return res.status(500).json({message: "Internal Server Error"});
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+app.post("/add-user/:userId", async (req, res) => {
+  try {
+    const { username, phoneNumber } = req.body;
+    const { userId } = req.params;
+    console.log(username, phoneNumber);
+    if (!username || !phoneNumber) {
+      throw new Error("The payload must include both userName and phoneNumber");
+    }
+    const client = new Client({ userId, username, phoneNumber });
+    await client.save();
+    res.status(200).json({ message: "Client Added Successful" });
+  } catch (error) {
+    return res.status(500).json({ message: "Something Went Wrong", error: error.message});
   }
 });
 module.exports = app;

@@ -1,7 +1,15 @@
 const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
-    const token = req.cookies["token"];
+  // let token = "";
+  // if(req.cookies[token]){
+  //   token = 
+  // }  
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+
+  // const token = req.cookies["token"];
+
   if (!token) {
     return res.status(401).send("Unauthorized");
   }
@@ -9,6 +17,7 @@ const authMiddleware = (req, res, next) => {
     if (err) {
       return res.status(403).send("Forbidden");
     }
+    console.log(req.user);
     req.user = decoded;
     next();
   });
