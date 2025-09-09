@@ -5,12 +5,16 @@ const authMiddleware = require("./middlewares/authMiddleware");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const Client = require("./models/clientsModel");
-
+const responseMiddleware = require("./middlewares/responseMiddleware");
 app.use(cookieParser());
 app.use(express.json());
-
+// attach res.success / res.error to all responses
+app.use(responseMiddleware);
 app.get("/", (req, res) => {
-  res.send("Welcome to the Retail Application");
+  return res.success(
+    { app: "Retail Application", uptime: process.uptime() },
+    "Welcome to the Retail Application"
+  );
 });
 
 app.post("/signup", async (req, res) => {
@@ -19,13 +23,13 @@ app.post("/signup", async (req, res) => {
     const { username, email, password } = req.body;
     const newUser = new User({ username, email, password });
     await newUser.save();
-    res.status(201).json({ message: "User registered successfully" });
+    return res.success({}, "User registered successfully", 201);
   } catch (error) {
     console.error("Error registering user:", error);
     if (error.code === 11000) {
-      return res.status(400).json({ message: "Email already exists" });
+      return res.error("Email already exists", 400);
     }
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.error(error.message || "Internal Server Error");
   }
 });
 
@@ -35,13 +39,13 @@ app.post("/login", async (req, res) => {
     console.log("Login attempt:", req.body);
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res.error("Invalid email or password", 400);
     }
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
-      return res.status(400).json({ message: "Invalid email or password" });
+      return res.error("Invalid email or password", 400);
     }
-
+    console.log(user._id);
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET || "default_secret",
@@ -49,37 +53,47 @@ app.post("/login", async (req, res) => {
         expiresIn: "1h",
       }
     );
-    res
-      .cookie("token", token, { httpOnly: true })
-      .json({ username: user.username, message: "Login successful", token});
+    res.cookie("token", token, { httpOnly: true });
+    return res.success({ username: user.username, token }, "Login successful");
   } catch (error) {
     console.error("Error logging in user:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.error(error.message || "Internal Server Error");
   }
 });
 
 app.get("/allUser", authMiddleware, async (req, res) => {
   try {
     const users = await User.find({});
-    res.send(users);
+    return res.success(users, "Users fetched successfully");
   } catch (error) {
     console.error("Error fetching profile:", error);
-    return res.status(500).json({ message: "Internal Server Error" });
+    return res.error(error.message || "Internal Server Error");
   }
 });
-app.post("/add-user/:userId", async (req, res) => {
+app.get("/clients", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const clients = await Client.find({ userId });
+    return res.success(clients, "Clients fetched successfully");
+  } catch (error) {
+    console.error("Error fetching clients:", error);
+    return res.error(error.message || "Internal Server Error");
+  }
+});
+app.post("/clients", authMiddleware, async (req, res) => {
   try {
     const { username, phoneNumber } = req.body;
-    const { userId } = req.params;
+    const userId = req.user.userId;
     console.log(username, phoneNumber);
     if (!username || !phoneNumber) {
       throw new Error("The payload must include both userName and phoneNumber");
     }
+    console.log(userId);
     const client = new Client({ userId, username, phoneNumber });
     await client.save();
-    res.status(200).json({ message: "Client Added Successful" });
+    return res.success({ id: client._id }, "Client added successfully", 201);
   } catch (error) {
-    return res.status(500).json({ message: "Something Went Wrong", error: error.message});
+    return res.error(error.message || "Something Went Wrong");
   }
 });
 module.exports = app;
