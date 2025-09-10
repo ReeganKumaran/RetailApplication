@@ -1,4 +1,4 @@
-﻿const nodemailer = require("nodemailer");
+const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
@@ -15,12 +15,7 @@ async function sendOtpEmail(to, otp, actionUrl) {
   const appName = "SRK Retail";
   const supportEmail = "support@srkretail.com";
 
-  const templatePath = path.join(
-    __dirname,
-    "../",
-    "template",
-    "otp.html"
-  );
+  const templatePath = path.join(__dirname, "templates", "otp.html");
 
   const htmlTemplate = fs.readFileSync(templatePath, "utf8");
   const html = htmlTemplate
@@ -39,3 +34,4 @@ async function sendOtpEmail(to, otp, actionUrl) {
 }
 
 module.exports = sendOtpEmail;
+

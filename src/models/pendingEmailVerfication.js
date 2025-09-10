@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-
+const bcrypt = require("bcrypt"); 
 const pendingSchema = new mongoose.Schema({
   username: {
     type: String,
@@ -20,6 +20,26 @@ const pendingSchema = new mongoose.Schema({
   createdIp: { type: String },
   expiresAt: { type: Date, required: true },
 });
+
+pendingSchema.pre("save", async function (next) {
+  if(!this.isModified("password")) {
+    return next();
+  }
+  try {
+    const isBcryptHash = (str) =>
+      typeof str === "string" && /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(str);
+    if (isBcryptHash(this.password)) {
+      return next();
+    }
+    const saltRounds = 10;
+    const salt = await bcrypt.genSalt(saltRounds);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (error) {
+    return next(error);
+  }
+});
+
 
 pendingSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
