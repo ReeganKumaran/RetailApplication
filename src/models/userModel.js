@@ -4,7 +4,8 @@ const { Schema } = mongoose;
 
 const userSchema = new Schema({
   username: { type: String, required: true },
-  email: { type: String, required: true , unique: true },
+  email: { type: String, required: true, unique: true },
+  emailVerified: { type: Boolean, default: false },
   password: { type: String, required: true },
 });
 
@@ -12,7 +13,7 @@ userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
   }
-  try{
+  try {
     const saltRounds = 10;
     const salt = await bcrypt.genSalt(saltRounds);
     this.password = await bcrypt.hash(this.password, salt);
@@ -20,7 +21,7 @@ userSchema.pre("save", async function (next) {
   } catch (error) {
     return next(error);
   }
-})
+});
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
   try {

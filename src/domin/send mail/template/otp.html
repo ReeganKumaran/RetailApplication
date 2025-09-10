@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#f5f7fb;">
+<head>
+  <meta charset="utf-8">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{appName}} · One-Time Password</title>
+  <style>
+    @media (prefers-color-scheme: dark) {
+      body, .wrapper { background:#0f1115 !important; }
+      .card { background:#161a22 !important; color:#e6e6e6 !important; }
+      .muted { color:#a7b0c0 !important; }
+      .btn { background:#4c8bf5 !important; }
+      .code { background:#0b0e14 !important; border-color:#2a3140 !important; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:0; background:#f5f7fb; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+  <!-- Preheader (hidden preview text) -->
+  <div style="display:none; max-height:0; overflow:hidden; opacity:0; color:transparent;">
+    Your {{appName}} verification code is {{otp}}. It expires in 10 minutes.
+  </div>
+
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" class="wrapper" style="background:#f5f7fb; padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+          <!-- Header -->
+          <tr>
+            <td align="center" style="padding: 8px 24px 0 24px;">
+              <h1 style="margin:16px 0 0 0; font-size:20px; font-weight:700; color:#111827;">{{appName}}</h1>
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td style="padding:16px 24px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="card" style="background:#ffffff; border-radius:12px; padding:24px; border:1px solid #e5e7eb;">
+                <tr>
+                  <td>
+                    <h2 style="margin:0 0 8px 0; font-size:18px; color:#111827;">
+                      Your One-Time Password (OTP)
+                    </h2>
+                    <p class="muted" style="margin:0 0 16px 0; color:#6b7280; font-size:14px; line-height:1.6;">
+                      Use the code below to verify your identity. This code will expire in <strong>10 minutes</strong>.
+                    </p>
+
+                    <!-- Big code block -->
+                    <div class="code" style="letter-spacing:6px; text-align:center; font-size:28px; font-weight:700; background:#f3f4f6; border:1px solid #e5e7eb; border-radius:10px; padding:16px 12px; margin:12px 0 20px 0;">
+                      {{otp}}
+                    </div>
+
+                    <!-- Button -->
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" style="margin: 0 auto 12px auto;">
+                      <tr>
+                        <td class="btn" align="center" bgcolor="#2563eb" style="border-radius:10px;">
+                          <a href="{{actionUrl}}" style="display:inline-block; padding:12px 20px; color:#ffffff; text-decoration:none; font-size:14px; font-weight:600;">
+                            Verify & Continue
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+
+                    <!-- Fallback text -->
+                    <p class="muted" style="margin:12px 0 0 0; color:#6b7280; font-size:12px; line-height:1.6;">
+                      If the button doesn’t work, copy and paste this link into your browser:<br>
+                      <a href="{{actionUrl}}" style="color:#2563eb; word-break:break-all;">{{actionUrl}}</a>
+                    </p>
+
+                    <hr style="border:none; border-top:1px solid #e5e7eb; margin:20px 0">
+
+                    <p class="muted" style="margin:0; color:#6b7280; font-size:12px; line-height:1.6;">
+                      Didn’t request this? You can ignore this email. For help, contact
+                      <a href="mailto:{{supportEmail}}" style="color:#2563eb;">{{supportEmail}}</a>.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td align="center" style="padding:0 24px;">
+              <p class="muted" style="margin:6px 0 0 0; font-size:11px; color:#9ca3af;">
+                © {{year}} {{appName}}. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
