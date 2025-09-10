@@ -17,7 +17,8 @@ const bcrypt = require("bcrypt");
 //helper
 const sendOtpEmail = require("./domin/send mail/send-otp/user-otp");
 const { setDefaultAutoSelectFamily } = require("net");
-const { isValidEmail } = require("./helper/helper");
+const { isValidEmail, isValidPassword } = require("./helper/helper");
+const {isValidPaassword} = require("./helper/helper");
 
 app.use(cookieParser());
 app.use(express.json());
@@ -37,17 +38,15 @@ app.get("/", async (req, res) => {
 app.post("/signup", async (req, res) => {
   console.log("Sign up attempted", req.body);
   try {
-    const { username, email } = req.body;
+    const { username, email, password, phoneNumber } = req.body;
     const clientIp = req.ip;
     console.log(isValidEmail(email));
     if (!isValidEmail(email) || !username) {
       return res.error("Invaild Email Format or UserName is missing");
     }
-    // const domain = email.split("@")[1];
-    // const mxOk = await hasMxRecord(domain);
-    // if(!mxOk){
-    //   return res.error
-    // }
+    if (!isValidPassword(password)) {
+      return res.error("Password must be at least 8 characters long and include uppercase, lowercase, digit, and special character.");
+    }
     const existsUser = await User.findOne({ email });
     if (existsUser) {
       return res.error("Email already exists", 400);
@@ -62,6 +61,8 @@ app.post("/signup", async (req, res) => {
       { email },
       {
         username,
+        password,
+        phoneNumber,
         email,
         otpHash,
         attempts: 0,
@@ -72,8 +73,6 @@ app.post("/signup", async (req, res) => {
     );
 
     await sendOtpEmail(email, opt);
-    // const newUser = new User({ username, email, password });
-    // await newUser.save();
     return res.success({}, "User registered successfully", 201);
   } catch (error) {
     console.error("Error registering user:", error);
@@ -84,27 +83,42 @@ app.post("/signup", async (req, res) => {
 app.post("/signup/verify", async (req, res) => {
   try {
     const { email, otp } = req.body;
+    const existsUser = await User.findOne({ email });
+    if (existsUser) {
+      return res.error("Email already verified. Please login.", 400);
+    }
     if (!email || !otp) return res.error("Email and OTP are requied");
     const pending = await PendingUser.findOne({ email });
     if (!pending)
       return res.error("No Pending verification. Please request a new OTP.");
-    if (prnding.expiresAt < new Date()) {
-      await Pending.deleteOne({ _id: pending._id });
+    if (pending.expiresAt < new Date()) {
+      await PendingUser.deleteOne({ _id: pending._id });
       return res.error("OPT expired. Please Request a new one.");
     }
     if (pending.attempts >= 5) {
-      await Pending.deleteOne({ _id: pending._id });
+      await PendingUser.deleteOne({ _id: pending._id });
       return res.error("Too Many Attempt. Please Request a new OTP");
     }
     const ok = await bcrypt.compare(otp, pending.otpHash);
     if (!ok) {
-      await Pending.updateOne({ _id: pending._id }, { $inc: { attempts: 1 } });
+      await PendingUser.updateOne(
+        { _id: pending._id },
+        { $inc: { attempts: 1 } }
+      );
       return res.status(400).json({ message: "Invalid OTP" });
     }
-
+    const newUser = new User({
+      username: pending.username,
+      email: pending.email,
+      emailVerified: true,
+    });
+    await newUser.save();
+    await PendingUser.deleteOne({ _id: pending._id });
+    return res.success({}, "Email verified successfully");
     // Create the real user now that email us proven
-
-  } catch (error) {}
+  } catch (error) {
+    return res.error(error.message || "Internal Server Error");
+  }
 });
 app.post("/login", async (req, res) => {
   try {

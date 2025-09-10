@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const pendingSchema = new mongoose.Schema({
   username: {
     type: String,
-    required: true
+    required: true,
   },
   email: {
     type: String,
@@ -13,6 +13,8 @@ const pendingSchema = new mongoose.Schema({
     index: true,
     unique: true,
   },
+  password: { type: String, required: true },
+  phoneNumber: { type: String },
   otpHash: { type: String, required: true },
   attempts: { type: Number, default: 0 },
   createdIp: { type: String },
