@@ -1,0 +1,12 @@
+{
+  "deliveryAddress": {
+    "street": "55 Residency Road",
+    "city": "Bengaluru",
+    "state": "KA",
+    "postalCode": "560025",
+    "country": "India",
+    "landmark": "Near Bangalore Club",
+    "isPrimary": true
+  }
+}
+

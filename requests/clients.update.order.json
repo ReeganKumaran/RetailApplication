@@ -1,0 +1,10 @@
+{
+  "item": {
+    "name": "Evening Gown",
+    "size": "L",
+    "price": 5499,
+    "quantity": 3
+  },
+  "deliveryDate": "2025-10-01T10:00:00.000Z",
+  "returnDate": "2025-10-08T10:00:00.000Z"
+}

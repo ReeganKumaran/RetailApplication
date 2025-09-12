@@ -24,23 +24,27 @@ const clientsModel = new Schema({
   clientAadhaar: {
     type: String,
   },
-
-  // order details
-  itemName: {
-    type: String,
-    required: true,
+  item: {
+    name: {
+      type: String,
+      required: true,
+    },
+    size: {
+      type: String,
+      required: true,
+    },
+    price: {
+      type: Number,
+      required: true,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+    },
   },
-  itemSize: {
-    type: String,
-    required: true,
-  },
-  itemPrice: {
-    type: Number,
-    required: true,
-  },
-  itemQuantity: {
-    type: Number,
-    required: true,   
+  retalStatus: {
+    type: Boolean,
+    default: false,
   },
   deliveryDate: {
     type: Date,
@@ -59,7 +63,7 @@ const clientsModel = new Schema({
     type: Date,
     default: Date.now,
   },
-  updateAt: {
+  updatedAt: {
     type: Date,
     default: Date.now,
   },

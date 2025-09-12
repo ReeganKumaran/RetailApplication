@@ -105,7 +105,7 @@ async function verifySignup(req, res) {
     const token = jwt.sign(
       { userId: newUser._id },
       process.env.JWT_SECRET || "default_secret",
-      { expiresIn: "1h" }
+      { expiresIn: "24h" }
     );
     res.cookie("token", token, {
       httpOnly: true,
@@ -141,7 +141,7 @@ async function login(req, res) {
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET || "default_secret",
-      { expiresIn: "1h" }
+      { expiresIn: "24h" }
     );
     res.cookie("token", token, {
       httpOnly: true,

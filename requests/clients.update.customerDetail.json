@@ -1,0 +1,17 @@
+{
+  "customerDetail": {
+    "customerName": "Johnathan Doe",
+    "customerAadhar": "1234-5678-9012",
+    "customerPhone": "+91-9876543210",
+    "customerEmail": "johnathan.doe@example.com",
+    "customerAddress": {
+      "street": "12 MG Road",
+      "city": "Bengaluru",
+      "state": "KA",
+      "postalCode": "560001",
+      "country": "India",
+      "landmark": "Opp. Metro Station",
+      "isPrimary": true
+    }
+  }
+}

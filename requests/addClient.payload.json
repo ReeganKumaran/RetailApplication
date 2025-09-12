@@ -4,10 +4,12 @@
   "email": "contact@acme.example",
   "aadhar": "1234-5678-9012",
   "note": "Express delivery; handle with care",
-  "itemName": "Wedding Dress",
-  "itemSize": "M",
-  "itemPrice": 4999,
-  "itemQuantity": 2,
+  "item": {
+    "name": "Wedding Dress",
+    "size": "M",
+    "price": 4999,
+    "quantity": 2
+  },
   "deliveryDate": "2025-09-30T10:00:00.000Z",
   "returnDate": "2025-10-07T10:00:00.000Z",
   "deliveryAddress": {

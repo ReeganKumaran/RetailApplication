@@ -19,7 +19,7 @@ const customerSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  updateAt: {
+  updatedAt: {
     type: Date,
     default: Date.now,
   },

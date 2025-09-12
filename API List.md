@@ -56,7 +56,8 @@
 
   - POST `/clients`
     - Auth: required
-    - Body: `{ "username": string, "phoneNumber": string }`
+    - Body: `{ "clientName": string, "phoneNumber"?: string, "email"?: string, "aadhar"?: string, "note"?: string, "item": { "name": string, "size": string, "price": number, "quantity": number }, "deliveryDate": string(ISO), "returnDate"?: string(ISO), "deliveryAddress"?: object, "customerDetail"?: object }`
+    - Required: `clientName`, `item.name`, `item.size`, `item.price`, `item.quantity`, `deliveryDate`
     - Effect: Creates a Client document for the authenticated user.
     - 201 Created: `res.success({ id }, "Client added successfully")`
     - 500: `res.error("Something Went Wrong")`
@@ -66,11 +67,22 @@
  curl -s -X POST http://localhost:5000/clients \
    -H 'Content-Type: application/json' \
    -H "Authorization: Bearer $TOKEN" \
-   -d '{"username":"user123","phoneNumber":"73787878565"}'
+   -d '{
+     "clientName":"John Doe",
+     "phoneNumber":"73787878565",
+     "item": {"name": "Shirt", "size": "L", "price": 499, "quantity": 2},
+     "deliveryDate": "2025-09-20T00:00:00.000Z"
+   }'
 
  # Fetch clients for authenticated user
  curl -s http://localhost:5000/clients \
    -H "Authorization: Bearer $TOKEN"
+
+  # Update a client (partial fields supported). Either path param :id or ?id= is accepted
+  curl -s -X PATCH http://localhost:5000/clients/CLIENT_ID \
+    -H 'Content-Type: application/json' \
+    -H "Authorization: Bearer $TOKEN" \
+    -d '{ "item": { "price": 599, "quantity": 3 }, "note": "Updated price" }'
  ```
 
  Notes:
