@@ -7,6 +7,14 @@ const userSchema = new Schema({
   email: { type: String, required: true, unique: true },
   emailVerified: { type: Boolean, default: false },
   password: { type: String, required: true },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updateAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 userSchema.pre("save", async function (next) {
@@ -15,7 +23,8 @@ userSchema.pre("save", async function (next) {
   }
   try {
     const isBcryptHash = (str) =>
-      typeof str === "string" && /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(str);
+      typeof str === "string" &&
+      /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(str);
 
     if (isBcryptHash(this.password)) {
       return next();

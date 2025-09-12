@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.use(authMiddleware);
 router.get("/allUser", listUsers);
+// router.get("/users", listUsers);
 
 module.exports = router;
 

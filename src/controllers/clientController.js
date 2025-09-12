@@ -13,15 +13,55 @@ async function listClients(req, res) {
 
 async function addClient(req, res) {
   try {
-    const { username, phoneNumber } = req.body;
+    const {
+      clientName,
+      phoneNumber = null,
+      itemName,
+      itemQuantity,
+      itemSize,
+      itemPrice,
+      deliveryDate,
+      returnDate = null,
+      email = null,
+      aadhar = null,
+      note = null,
+      deliveryAddress = null,
+      customerDetail,
+    } = req.body;
     const userId = req.user.userId;
-    if (!username || !phoneNumber) {
+    if (
+      !clientName ||
+      !itemName ||
+      !itemSize ||
+      !itemPrice ||
+      !deliveryDate ||
+      !itemQuantity
+    ) {
+      // console.log("Hello i am client post api")
       return res.error(
-        "The payload must include both username and phoneNumber",
+        "The payload must include both username, item name, size, rate, delivery date, quantity",
         400
       );
     }
-    const client = new Client({ userId, username, phoneNumber });
+    const client = new Client({
+      userId,
+      clientName,
+      // map API payload fields to schema field names
+      clientPhoneNumber: phoneNumber,
+      clientEmail: email,
+      clientAadhaar: aadhar,
+      notes: note,
+      // order fields
+      itemName,
+      itemQuantity,
+      itemSize,
+      itemPrice,
+      deliveryDate,
+      returnDate,
+      // embedded docs
+      deliveryAddress,
+      customerDetail,
+    });
     await client.save();
     return res.success({ id: client._id }, "Client added successfully", 201);
   } catch (error) {
@@ -30,4 +70,3 @@ async function addClient(req, res) {
 }
 
 module.exports = { listClients, addClient };
-

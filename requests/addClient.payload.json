@@ -1,0 +1,37 @@
+{
+  "clientName": "Acme Corp",
+  "phoneNumber": "9876543210",
+  "email": "contact@acme.example",
+  "aadhar": "1234-5678-9012",
+  "note": "Express delivery; handle with care",
+  "itemName": "Wedding Dress",
+  "itemSize": "M",
+  "itemPrice": 4999,
+  "itemQuantity": 2,
+  "deliveryDate": "2025-09-30T10:00:00.000Z",
+  "returnDate": "2025-10-07T10:00:00.000Z",
+  "deliveryAddress": {
+    "street": "221B Baker Street",
+    "city": "Mumbai",
+    "state": "MH",
+    "postalCode": "400001",
+    "country": "India",
+    "landmark": "Near Central Library",
+    "isPrimary": true
+  },
+  "customerDetail": {
+    "customerName": "John Doe",
+    "customerAadhar": "1234-5678-9012",
+    "customerPhone": "9876543210",
+    "customerEmail": "john.doe@example.com",
+    "customerAddress": {
+      "street": "742 Evergreen Terrace",
+      "city": "Pune",
+      "state": "MH",
+      "postalCode": "411001",
+      "country": "India",
+      "landmark": "City Park",
+      "isPrimary": true
+    }
+  }
+}
