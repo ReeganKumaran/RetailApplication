@@ -1,8 +1,8 @@
 {
-  "clientName": "Reegan R.",
-  "note": "Change size to L and delay by 1 day",
-  "item": {
-    "size": "L",
-    "price": 5299
+  "clientName": "Karthik S.",
+  "note": "Upgrade to premium fabric; extend by 2 days",
+  "itemDetail": {
+    "size": "XL",
+    "price": 6899
   }
 }

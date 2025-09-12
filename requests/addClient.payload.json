@@ -1,38 +1,38 @@
 {
-  "clientName": "Acme Corp",
-  "phoneNumber": "9876543210",
-  "email": "contact@acme.example",
-  "aadhar": "1234-5678-9012",
-  "note": "Express delivery; handle with care",
-  "item": {
-    "name": "Wedding Dress",
-    "size": "M",
-    "price": 4999,
-    "quantity": 2
+  "clientName": "Blue Orchid Events",
+  "phoneNumber": "9123456789",
+  "email": "contact@blueorchid.example",
+  "aadhar": "5678-9012-3456",
+  "note": "Deliver before 9 AM. Include spare buttons.",
+  "itemDetail": {
+    "name": "Designer Lehenga",
+    "size": "S",
+    "price": 7999,
+    "quantity": 1
   },
-  "deliveryDate": "2025-09-30T10:00:00.000Z",
-  "returnDate": "2025-10-07T10:00:00.000Z",
+  "deliveryDate": "2025-10-15T09:00:00.000Z",
+  "returnDate": "2025-10-18T18:30:00.000Z",
   "deliveryAddress": {
-    "street": "221B Baker Street",
-    "city": "Mumbai",
-    "state": "MH",
-    "postalCode": "400001",
+    "street": "19 Residency Road",
+    "city": "Bengaluru",
+    "state": "KA",
+    "postalCode": "560025",
     "country": "India",
-    "landmark": "Near Central Library",
+    "landmark": "Opp. Opera House",
     "isPrimary": true
   },
   "customerDetail": {
-    "customerName": "John Doe",
-    "customerAadhar": "1234-5678-9012",
-    "customerPhone": "9876543210",
-    "customerEmail": "john.doe@example.com",
+    "customerName": "Aarav Mehta",
+    "customerAadhar": "5678-9012-3456",
+    "customerPhone": "9123456789",
+    "customerEmail": "aarav.mehta@example.com",
     "customerAddress": {
-      "street": "742 Evergreen Terrace",
-      "city": "Pune",
-      "state": "MH",
-      "postalCode": "411001",
+      "street": "44 MG Road",
+      "city": "Chennai",
+      "state": "TN",
+      "postalCode": "600002",
       "country": "India",
-      "landmark": "City Park",
+      "landmark": "Near Anna Statue",
       "isPrimary": true
     }
   }

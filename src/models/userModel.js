@@ -2,20 +2,15 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const { Schema } = mongoose;
 
-const userSchema = new Schema({
-  username: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  emailVerified: { type: Boolean, default: false },
-  password: { type: String, required: true },
-  createdAt: {
-    type: Date,
-    default: Date.now,
+const userSchema = new Schema(
+  {
+    username: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    emailVerified: { type: Boolean, default: false },
+    password: { type: String, required: true },
   },
-  updateAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
+  { timestamps: true }
+);
 
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {

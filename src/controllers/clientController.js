@@ -1,17 +1,28 @@
 const Client = require("../models/clientsModel");
 
-async function  listClients(req, res) {
+async function listClients(req, res) {
   try {
     const userId = req.user.userId;
-    const id = (req.query && req.query.id) || null;
-    if (id) {
-      const client = await Client.findOne({ _id: id, userId });
-      if (!client) {
-        return res.error("Client not found", 404);
-      }
-      return res.success(client, "Client fetched successfully");
-    }
-    const clients = await Client.find({ userId });
+    const page = (req.query && req.query.page) || null;
+    const limit = (req.query && req.query.limit) || null;
+    const skip = (page - 1) * limit; // page = (1 - 1) = 0 * 1 = 0 mean skin 0 it will take from stating until limit
+    if (!userId) res.error("userID is missing please login again again");
+    // const id = (req.query && req.query.id) || null;
+    // if (id) {  
+    // const client = await Client.findOne({ userId });
+    // if (!client) {
+    // return res.error("Client not found", 404);
+    // }
+    // return res.success(client, "Client fetched successfully");
+    // }
+    const clients = await Client.find({ userId })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+    // const currectDate = new Date();
+    // if (clients.returnDate) {
+    //   client.total;
+    // }
     return res.success(clients, "Clients fetched successfully");
   } catch (error) {
     console.error("Error fetching clients:", error);
@@ -24,7 +35,8 @@ async function addClient(req, res) {
     const {
       clientName,
       phoneNumber = null,
-      item,
+      itemDetail: itemDetailBody,
+      item: legacyItemBody,
       deliveryDate,
       returnDate = null,
       email = null,
@@ -33,22 +45,26 @@ async function addClient(req, res) {
       deliveryAddress = null,
       customerDetail,
     } = req.body;
+    const itemDetail = itemDetailBody || legacyItemBody;
     const userId = req.user.userId;
     if (
       !clientName ||
-      !item ||
-      !item.name ||
-      !item.size ||
-      (item.price === undefined || item.price === null) ||
-      (item.quantity === undefined || item.quantity === null) ||
+      !itemDetail ||
+      !itemDetail.name ||
+      !itemDetail.size ||
+      itemDetail.price === undefined ||
+      itemDetail.price === null ||
+      itemDetail.quantity === undefined ||
+      itemDetail.quantity === null ||
       !deliveryDate
     ) {
       // console.log("Hello i am client post api")
       return res.error(
-        "Payload must include clientName, item{name,size,price,quantity}, and deliveryDate",
+        "Payload must include clientName, itemDetail{name,size,price,quantity}, and deliveryDate",
         400
       );
     }
+
     const client = new Client({
       userId,
       clientName,
@@ -58,7 +74,7 @@ async function addClient(req, res) {
       clientAadhaar: aadhar,
       notes: note,
       // item subdocument
-      item,
+      itemDetail,
       deliveryDate,
       returnDate,
       // embedded docs
@@ -74,7 +90,7 @@ async function addClient(req, res) {
 
 async function editClient(req, res) {
   try {
-    console.log("i am working well ra venna")
+    console.log("i am working well ra venna");
     const rawUpdate = req.body || {};
     const update = {};
     const id = (req.params && req.params.id) || (req.query && req.query.id);
@@ -85,11 +101,11 @@ async function editClient(req, res) {
 
     for (const [key, value] of Object.entries(rawUpdate)) {
       if (value === null || value === undefined) continue;
-      if (key === "item" && typeof value === "object" && value !== null) {
-        // Flatten nested item updates to avoid overwriting the entire subdocument
+      if ((key === "itemDetail" || key === "item") && typeof value === "object" && value !== null) {
+        // Flatten nested itemDetail updates to avoid overwriting the entire subdocument
         for (const [subKey, subVal] of Object.entries(value)) {
           if (subVal !== null && subVal !== undefined) {
-            update[`item.${subKey}`] = subVal;
+            update[`itemDetail.${subKey}`] = subVal;
           }
         }
       } else {

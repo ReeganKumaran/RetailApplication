@@ -51,13 +51,17 @@
   - GET `/clients`
     - Auth: required
     - Effect: Returns all clients for the authenticated user.
+    - Response includes virtuals:
+      - `totalDays` = ceil((returnDate or now) − deliveryDate) in days (min 1)
+      - `itemDetail.totalPrice` = `itemDetail.price * itemDetail.quantity * totalDays`
     - 200 OK: `res.success(Client[], "Clients fetched successfully")`
     - 500: `res.error("Internal Server Error")`
 
   - POST `/clients`
     - Auth: required
-    - Body: `{ "clientName": string, "phoneNumber"?: string, "email"?: string, "aadhar"?: string, "note"?: string, "item": { "name": string, "size": string, "price": number, "quantity": number }, "deliveryDate": string(ISO), "returnDate"?: string(ISO), "deliveryAddress"?: object, "customerDetail"?: object }`
-    - Required: `clientName`, `item.name`, `item.size`, `item.price`, `item.quantity`, `deliveryDate`
+    - Body: `{ "clientName": string, "phoneNumber"?: string, "email"?: string, "aadhar"?: string, "note"?: string, "itemDetail": { "name": string, "size": string, "price": number, "quantity": number }, "deliveryDate": string(ISO), "returnDate"?: string(ISO), "deliveryAddress"?: object, "customerDetail"?: object }`
+    - Required: `clientName`, `itemDetail.name`, `itemDetail.size`, `itemDetail.price`, `itemDetail.quantity`, `deliveryDate`
+    - Backward compatible: also accepts legacy `item` (mapped to `itemDetail`).
     - Effect: Creates a Client document for the authenticated user.
     - 201 Created: `res.success({ id }, "Client added successfully")`
     - 500: `res.error("Something Went Wrong")`
@@ -70,7 +74,7 @@
    -d '{
      "clientName":"John Doe",
      "phoneNumber":"73787878565",
-     "item": {"name": "Shirt", "size": "L", "price": 499, "quantity": 2},
+    "itemDetail": {"name": "Shirt", "size": "L", "price": 499, "quantity": 2},
      "deliveryDate": "2025-09-20T00:00:00.000Z"
    }'
 
@@ -82,7 +86,7 @@
   curl -s -X PATCH http://localhost:5000/clients/CLIENT_ID \
     -H 'Content-Type: application/json' \
     -H "Authorization: Bearer $TOKEN" \
-    -d '{ "item": { "price": 599, "quantity": 3 }, "note": "Updated price" }'
+    -d '{ "itemDetail": { "price": 6299, "size": "M" }, "note": "Update fabric" }'
  ```
 
  Notes:

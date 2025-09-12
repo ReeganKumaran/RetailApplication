@@ -29,4 +29,8 @@ const isValidPassword = (password) => {
   );
 }
 
+// const updateReturnAndStatus  = (this, next) => {
+
+// }
+
 module.exports = { isValidEmail, hasMxRecord, isValidPassword };
