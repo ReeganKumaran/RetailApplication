@@ -1,0 +1,51 @@
+[
+  {
+    "_id": "c_1001",
+    "userId": "68c47ddec0700503bfa0fcbd",
+    "name": "Emma Watson",
+    "phone": "9876543210",
+    "email": "contact@acme.example",
+    "aadhaar": "1234-5678-9012",
+    "defaultAddress": {
+      "street": "221B Baker Street",
+      "city": "Mumbai",
+      "state": "MH",
+      "postalCode": "400001",
+      "country": "India",
+      "landmark": "Near Central Library"
+    },
+    "notes": "VIP; handle with care",
+    "stats": {
+      "totalRentals": 3,
+      "outstandingBalance": 1499,
+      "lastRentalAt": "2025-09-12T22:30:06.963Z"
+    },
+    "createdAt": "2025-09-12T22:26:39.343Z",
+    "updatedAt": "2025-09-12T22:30:06.963Z"
+  },
+  {
+    "_id": "c_1002",
+    "userId": "68c47ddec0700503bfa0fcbd",
+    "name": "John Doe",
+    "phone": "9876500000",
+    "email": "john.doe@example.com",
+    "aadhaar": "9999-8888-7777",
+    "defaultAddress": {
+      "street": "742 Evergreen Terrace",
+      "city": "Pune",
+      "state": "MH",
+      "postalCode": "411001",
+      "country": "India",
+      "landmark": "City Park"
+    },
+    "notes": "Prefers weekend pickups",
+    "stats": {
+      "totalRentals": 1,
+      "outstandingBalance": 0,
+      "lastRentalAt": "2025-08-12T17:45:00.000Z"
+    },
+    "createdAt": "2025-08-01T08:00:00.000Z",
+    "updatedAt": "2025-08-12T17:45:00.000Z"
+  }
+]
+

@@ -1,0 +1,23 @@
+[
+  {
+    "_id": "inv_9001",
+    "userId": "68c47ddec0700503bfa0fcbd",
+    "rentalId": "r_5001",
+    "invoiceNumber": "INV-2025-00051",
+    "lineItems": [
+      { "label": "Wedding Dress (2 x 4999)", "amount": 9998 },
+      { "label": "Tax", "amount": 1800 },
+      { "label": "Delivery Fee", "amount": 200 }
+    ],
+    "totals": { "subtotal": 9998, "tax": 1800, "fees": 200, "discount": 0, "total": 13998 },
+    "payments": [
+      { "date": "2025-09-10T09:00:00.000Z", "amount": 2000, "method": "UPI" },
+      { "date": "2025-10-30T10:00:00.000Z", "amount": 8000, "method": "Card" }
+    ],
+    "balanceDue": 3998,
+    "issuedAt": "2025-09-10T09:00:00.000Z",
+    "dueAt": "2025-11-02T18:00:00.000Z",
+    "paidAt": null
+  }
+]
+

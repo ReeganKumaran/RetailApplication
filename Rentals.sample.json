@@ -1,0 +1,100 @@
+[
+  {
+    "_id": "r_5001",
+    "userId": "68c47ddec0700503bfa0fcbd",
+    "clientId": "c_1001",
+    "items": [
+      {
+        "itemId": "i_wedding_dress",
+        "name": "Wedding Dress",
+        "size": "M",
+        "unitPrice": 4999,
+        "quantity": 2,
+        "rateType": "per_day"
+      }
+    ],
+    "schedule": {
+      "orderDate": "2025-09-10T09:00:00.000Z",
+      "deliveryDate": "2025-10-30T10:00:00.000Z",
+      "dueDate": "2025-11-02T18:00:00.000Z",
+      "returnDate": null
+    },
+    "status": "in_use",
+    "statusHistory": [
+      { "status": "reserved", "at": "2025-09-10T09:00:00.000Z", "note": "Reservation confirmed" },
+      { "status": "out_for_delivery", "at": "2025-10-30T08:00:00.000Z" },
+      { "status": "delivered", "at": "2025-10-30T10:15:00.000Z" },
+      { "status": "in_use", "at": "2025-10-30T10:30:00.000Z" }
+    ],
+    "billing": {
+      "subtotal": 9998,
+      "discount": 0,
+      "deposit": 2000,
+      "tax": 1800,
+      "deliveryFee": 200,
+      "otherFees": 0,
+      "total": 13998,
+      "payments": [
+        { "date": "2025-09-10T09:00:00.000Z", "amount": 2000, "method": "UPI", "ref": "TXN123" },
+        { "date": "2025-10-30T10:00:00.000Z", "amount": 8000, "method": "Card" }
+      ],
+      "balanceDue": 3998
+    },
+    "addresses": {
+      "delivery": { "street": "221B Baker Street", "city": "Mumbai", "state": "MH", "postalCode": "400001", "country": "India" },
+      "pickup": { "street": "221B Baker Street", "city": "Mumbai", "state": "MH", "postalCode": "400001", "country": "India" }
+    },
+    "terms": { "gracePeriodHours": 6, "lateFeePerDay": 500 },
+    "notes": "Express delivery; handle with care",
+    "createdAt": "2025-09-12T22:27:12.564Z",
+    "updatedAt": "2025-09-12T22:27:12.564Z"
+  },
+  {
+    "_id": "r_5002",
+    "userId": "68c47ddec0700503bfa0fcbd",
+    "clientId": "c_1001",
+    "items": [
+      {
+        "itemId": "i_saree_gold",
+        "name": "Designer Saree",
+        "size": "Free",
+        "unitPrice": 2499,
+        "quantity": 1,
+        "rateType": "per_day"
+      }
+    ],
+    "schedule": {
+      "orderDate": "2025-08-01T08:00:00.000Z",
+      "deliveryDate": "2025-08-10T10:00:00.000Z",
+      "dueDate": "2025-08-12T18:00:00.000Z",
+      "returnDate": "2025-08-12T17:45:00.000Z"
+    },
+    "status": "returned",
+    "statusHistory": [
+      { "status": "reserved", "at": "2025-08-01T08:00:00.000Z" },
+      { "status": "delivered", "at": "2025-08-10T10:05:00.000Z" },
+      { "status": "in_use", "at": "2025-08-10T10:15:00.000Z" },
+      { "status": "returned", "at": "2025-08-12T17:45:00.000Z" }
+    ],
+    "billing": {
+      "subtotal": 2499,
+      "discount": 0,
+      "deposit": 500,
+      "tax": 450,
+      "deliveryFee": 0,
+      "otherFees": 0,
+      "total": 2949,
+      "payments": [
+        { "date": "2025-08-01T08:00:00.000Z", "amount": 500, "method": "Cash" },
+        { "date": "2025-08-12T17:45:00.000Z", "amount": 2449, "method": "UPI" }
+      ],
+      "balanceDue": 0
+    },
+    "addresses": { "delivery": { "city": "Pune" } },
+    "terms": { "lateFeePerDay": 300 },
+    "notes": "",
+    "createdAt": "2025-08-01T08:00:00.000Z",
+    "updatedAt": "2025-08-12T17:45:00.000Z"
+  }
+]
+

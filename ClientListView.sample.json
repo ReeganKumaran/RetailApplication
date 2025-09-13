@@ -1,0 +1,21 @@
+[
+  {
+    "clientId": "c_1001",
+    "name": "Emma Watson",
+    "phone": "9876543210",
+    "lastRentalAt": "2025-09-12T22:30:06.963Z",
+    "totalRentals": 3,
+    "lastStatus": "in_use",
+    "outstandingBalance": 3998
+  },
+  {
+    "clientId": "c_1002",
+    "name": "John Doe",
+    "phone": "9876500000",
+    "lastRentalAt": "2025-08-12T17:45:00.000Z",
+    "totalRentals": 1,
+    "lastStatus": "returned",
+    "outstandingBalance": 0
+  }
+]
+

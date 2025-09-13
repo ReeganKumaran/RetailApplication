@@ -1,0 +1,16 @@
+[{
+  "_id": {
+    "$oid": "68c47ddec0700503bfa0fcbd"
+  },
+  "username": "reegan",
+  "email": "reegank20@gmail.com",
+  "emailVerified": true,
+  "password": "$2b$10$/SaRFcOGlUXjkGVHd4PPseyCbkaSwfCUWjDYgQHEOtmqAcazTT6Q.",
+  "createdAt": {
+    "$date": "2025-09-12T20:09:02.595Z"
+  },
+  "updatedAt": {
+    "$date": "2025-09-12T20:09:02.595Z"
+  },
+  "__v": 0
+}]
