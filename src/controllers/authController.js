@@ -34,7 +34,7 @@ async function signup(req, res) {
     const passwordHash = await bcrypt.hash(password, 10);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    await PendingClient.findOneAndUpdate(
+    await PendingOwner.findOneAndUpdate(
       { email },
       {
         username,
