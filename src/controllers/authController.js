@@ -12,7 +12,7 @@ async function signup(req, res) {
     const clientIp = req.ip;
 
     if (!username || !email || !password) {
-      return res.error("Clientname, email, and password are required", 400);
+      return res.error("Ownername, email, and password are required", 400);
     }
     if (!isValidEmail(email)) {
       return res.error("Invalid email format", 400);
