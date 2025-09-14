@@ -1,8 +1,8 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
-const Client = require("../models/clientModel");
-const PendingClient = require("../models/pendingEmailVerfication");
+const Owner = require("../models/ownerModel");
+const PendingOwner = require("../models/pendingEmailVerfication");
 const sendOtpEmail = require("../services/email/sendOtp");
 const { isValidEmail, isValidPassword } = require("../helper/helper");
 
