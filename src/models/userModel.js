@@ -1,45 +1,151 @@
 const mongoose = require("mongoose");
-const bcrypt = require("bcrypt");
+const addressSchema = require("./addressModel"); // exports schema
+const customerDetail = require("./customerModel");
 const { Schema } = mongoose;
+// Use CommonJS-friendly require for mongoose-sequence
 
-const userSchema = new Schema(
+const UserSchema = new Schema(
   {
-    username: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    emailVerified: { type: Boolean, default: false },
-    password: { type: String, required: true },
+    // client details
+    customerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Client",
+      required: true,
+    },
+    // clientId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Rental",
+    //   required: true,
+    // },
+    clientName: {
+      type: String,
+      required: true,
+    },
+    clientPhoneNumber: {
+      type: String,
+    },
+    clientEmail: {
+      type: String,
+    },
+    clientAadhaar: {
+      type: String,
+    },
+    itemDetail: {
+      name: {
+        type: String,
+        required: true,
+      },
+      size: {
+        type: String,
+        required: true,
+      },
+      price: {
+        type: Number,
+        required: true,
+      },
+      quantity: {
+        type: Number,
+        required: true,
+      },
+    },
+    retalStatus: {
+      type: String,
+      enum: ["Pending", "Returned"],
+      default: "Pending",
+    },
+    deliveryDate: {
+      type: Date,
+      required: true,
+    },
+    returnDate: {
+      type: Date,
+    },
+    notes: {
+      type: String,
+    },
+    // relations and address details
+    customerDetail,
+    deliveryAddress: addressSchema,
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
-  try {
-    const isBcryptHash = (str) =>
-      typeof str === "string" &&
-      /^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$/.test(str);
+// RentalSchema.plugin(AutoIncrement, {
+//   id: "rental_clientId",
+//   inc_field: "clientId",
+//   start_seq: 1,
+// });
 
-    if (isBcryptHash(this.password)) {
-      return next();
+// Virtuals: compute totalDays and itemDetail.totalPr ice on read
+
+// RentalSchema.virtual("clientIdFormatted").get(function () {
+//   if (this.clientId === undefined || this.clientId === null) return undefined;
+//   return String(this.clientId).padStart(5, "0");
+// });
+
+UserSchema.virtual("totalDays").get(function () {
+  if (!this.deliveryDate) return undefined;
+  const end = this.returnDate ? new Date(this.returnDate) : new Date();
+  const start = new Date(this.deliveryDate);
+  const diffMs = end - start;
+  const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  return Math.max(1, days);
+});
+
+UserSchema.virtual("itemDetail.totalPrice").get(function () {
+  const price =
+    this.itemDetail && typeof this.itemDetail.price === "number"
+      ? this.itemDetail.price
+      : 0;
+  const qty =
+    this.itemDetail && typeof this.itemDetail.quantity === "number"
+      ? this.itemDetail.quantity
+      : 0;
+  if (!this.deliveryDate) return 0;
+  const end = this.returnDate ? new Date(this.returnDate) : new Date();
+  const start = new Date(this.deliveryDate);
+  const diffMs = end - start;
+  const days = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  return price * qty * (Number.isFinite(days) ? days : 0);
+});
+
+// Validation only (no stored totalDays)
+UserSchema.pre("save", function (next) {
+  try {
+    if (this.deliveryDate && this.returnDate) {
+      const start = new Date(this.deliveryDate);
+      const end = new Date(this.returnDate);
+      if (end < start) {
+        return next(
+          new Error("Return date must be later than or equal to delivery date.")
+        );
+      }
     }
-    const saltRounds = 10;
-    const salt = await bcrypt.genSalt(saltRounds);
-    this.password = await bcrypt.hash(this.password, salt);
     next();
-  } catch (error) {
-    return next(error);
+  } catch (err) {
+    next(err);
   }
 });
 
-userSchema.methods.comparePassword = async function (candidatePassword) {
+UserSchema.pre("findOneAndUpdate", async function (next) {
   try {
-    return await bcrypt.compare(candidatePassword, this.password);
-  } catch (error) {
-    throw new Error("Password comparison failed");
+    const update = this.getUpdate() || {};
+    const set = update.$set || update;
+    const doc = await this.model.findOne(this.getQuery());
+    const d = doc && doc.deliveryDate ? new Date(doc.deliveryDate) : null;
+    if (set.returnDate && d) {
+      const r = new Date(set.returnDate);
+      if (r < d) {
+        return next(
+          new Error("Return date must be later than or equal to delivery date.")
+        );
+      }
+    }
+    next();
+  } catch (err) {
+    next(err);
   }
-};
+});
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.model("User", UserSchema);
 module.exports = User;

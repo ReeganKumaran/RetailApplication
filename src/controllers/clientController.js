@@ -65,8 +65,8 @@ async function addClient(req, res) {
       );
     }
 
-    const client = new Client({
-      userId,
+    const client = new User({
+      customerId: customerId,
       clientName,
       // map API payload fields to schema field names
       clientPhoneNumber: phoneNumber,

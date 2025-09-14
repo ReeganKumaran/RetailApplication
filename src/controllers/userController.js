@@ -1,8 +1,8 @@
-const User = require("../models/userModel");
+const Client = require("../models/clientModel");
 
 async function listUsers(req, res) {
   try {
-    const users = await User.find({});
+    const users = await Client.find({});
     return res.success(users, "Users fetched successfully");
   } catch (error) {
     console.error("Error fetching users:", error);

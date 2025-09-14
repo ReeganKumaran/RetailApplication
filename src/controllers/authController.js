@@ -1,8 +1,8 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
-const User = require("../models/userModel");
-const PendingUser = require("../models/pendingEmailVerfication");
+const Client = require("../models/clientModel");
+const PendingClient = require("../models/pendingEmailVerfication");
 const sendOtpEmail = require("../services/email/sendOtp");
 const { isValidEmail, isValidPassword } = require("../helper/helper");
 
@@ -12,7 +12,7 @@ async function signup(req, res) {
     const clientIp = req.ip;
 
     if (!username || !email || !password) {
-      return res.error("Username, email, and password are required", 400);
+      return res.error("Clientname, email, and password are required", 400);
     }
     if (!isValidEmail(email)) {
       return res.error("Invalid email format", 400);
@@ -24,8 +24,8 @@ async function signup(req, res) {
       );
     }
 
-    const existsUser = await User.findOne({ email });
-    if (existsUser) {
+    const existsClient = await Client.findOne({ email });
+    if (existsClient) {
       return res.error("Email already exists", 400);
     }
 
@@ -34,7 +34,7 @@ async function signup(req, res) {
     const passwordHash = await bcrypt.hash(password, 10);
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
-    await PendingUser.findOneAndUpdate(
+    await PendingClient.findOneAndUpdate(
       { email },
       {
         username,
@@ -65,45 +65,45 @@ async function verifySignup(req, res) {
       return res.error("Email and OTP are required", 400);
     }
 
-    const existsUser = await User.findOne({ email });
-    if (existsUser) {
+    const existsClient = await Client.findOne({ email });
+    if (existsClient) {
       return res.error("Email already verified. Please login.", 400);
     }
 
-    const pending = await PendingUser.findOne({ email });
+    const pending = await PendingClient.findOne({ email });
     if (!pending) {
       return res.error("No pending verification. Please request a new OTP.", 400);
     }
 
     if (pending.expiresAt < new Date()) {
-      await PendingUser.deleteOne({ _id: pending._id });
+      await PendingClient.deleteOne({ _id: pending._id });
       return res.error("OTP expired. Please request a new one.", 400);
     }
 
     if (pending.attempts >= 5) {
-      await PendingUser.deleteOne({ _id: pending._id });
+      await PendingClient.deleteOne({ _id: pending._id });
       return res.error("Too many attempts. Please request a new OTP.", 400);
     }
 
     const ok = await bcrypt.compare(otp, pending.otpHash);
     if (!ok) {
-      await PendingUser.updateOne(
+      await PendingClient.updateOne(
         { _id: pending._id },
         { $inc: { attempts: 1 } }
       );
       return res.error("Invalid OTP", 400);
     }
 
-    const newUser = new User({
+    const newClient = new Client({
       username: pending.username,
       email: pending.email,
       password: pending.password,
       emailVerified: true,
     });
-    await newUser.save();
+    await newClient.save();
 
     const token = jwt.sign(
-      { userId: newUser._id },
+      { userId: newClient._id },
       process.env.JWT_SECRET || "default_secret",
       { expiresIn: "24h" }
     );
@@ -113,7 +113,7 @@ async function verifySignup(req, res) {
       secure: process.env.NODE_ENV === "production",
     });
 
-    await PendingUser.deleteOne({ _id: pending._id });
+    await PendingClient.deleteOne({ _id: pending._id });
     return res.success({ token }, "Email verified successfully");
   } catch (error) {
     return res.error(error.message || "Internal Server Error");
@@ -128,7 +128,7 @@ async function login(req, res) {
       return res.error("Email and password are required", 400);
     }
 
-    const user = await User.findOne({ email });
+    const user = await Client.findOne({ email });
     if (!user) {
       return res.error("Invalid email or password", 400);
     }
