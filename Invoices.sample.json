@@ -1,7 +1,7 @@
 [
   {
     "_id": "inv_9001",
-    "userId": "68c47ddec0700503bfa0fcbd",
+    "customerId": "68c47ddec0700503bfa0fcbd",
     "rentalId": "r_5001",
     "invoiceNumber": "INV-2025-00051",
     "lineItems": [

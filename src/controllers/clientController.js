@@ -1,21 +1,21 @@
-const Client = require("../models/clientsModel");
+const User = require("../models/userModel");
 
 async function listClients(req, res) {
   try {
-    const userId = req.user.userId;
+    const customerId = req.user.customerId;
     const page = (req.query && req.query.page) || null;
     const limit = (req.query && req.query.limit) || null;
     const skip = (page - 1) * limit; // page = (1 - 1) = 0 * 1 = 0 mean skin 0 it will take from stating until limit
-    if (!userId) res.error("userID is missing please login again again");
+    if (!customerId) res.error("userID is missing please login again again");
     // const id = (req.query && req.query.id) || null;
     // if (id) {  
-    // const client = await Client.findOne({ userId });
+    // const client = await Client.findOne({ customerId });
     // if (!client) {
     // return res.error("Client not found", 404);
     // }
     // return res.success(client, "Client fetched successfully");
     // }
-    const clients = await Client.find({ userId })
+    const clients = await User.find({ customerId })
       .skip(skip)
       .limit(limit)
       .sort({ createdAt: -1 });
@@ -46,7 +46,7 @@ async function addClient(req, res) {
       customerDetail,
     } = req.body;
     const itemDetail = itemDetailBody || legacyItemBody;
-    const userId = req.user.userId;
+    const customerId = req.user.customerId;
     if (
       !clientName ||
       !itemDetail ||
@@ -94,7 +94,7 @@ async function editClient(req, res) {
     const rawUpdate = req.body || {};
     const update = {};
     const id = (req.params && req.params.id) || (req.query && req.query.id);
-    const userId = req.user.userId;
+    const customerId = req.user.customerId;
     if (!id) {
       return res.error("Missing client id (use /clients/:id or ?id=)", 400);
     }
@@ -113,8 +113,8 @@ async function editClient(req, res) {
       }
     }
 
-    const updated = await Client.findOneAndUpdate(
-      { _id: id, userId },
+    const updated = await User.findOneAndUpdate(
+      { _id: id, customerId },
       { $set: update },
       { new: true }
     );
