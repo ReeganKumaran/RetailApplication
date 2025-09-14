@@ -24,8 +24,8 @@ async function signup(req, res) {
       );
     }
 
-    const existsClient = await Client.findOne({ email });
-    if (existsClient) {
+    const existsOwner = await Owner.findOne({ email });
+    if (existsOwner) {
       return res.error("Email already exists", 400);
     }
 
