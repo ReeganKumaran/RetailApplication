@@ -80,45 +80,45 @@ async function verifySignup(req, res) {
       return res.error("Email and OTP are required", 400);
     }
 
-    const existsClient = await Client.findOne({ email });
-    if (existsClient) {
+    const existsOwner = await Owner.findOne({ email });
+    if (existsOwner) {
       return res.error("Email already verified. Please login.", 400);
     }
 
-    const pending = await PendingClient.findOne({ email });
+    const pending = await PendingOwner.findOne({ email });
     if (!pending) {
       return res.error("No pending verification. Please request a new OTP.", 400);
     }
 
     if (pending.expiresAt < new Date()) {
-      await PendingClient.deleteOne({ _id: pending._id });
+      await PendingOwner.deleteOne({ _id: pending._id });
       return res.error("OTP expired. Please request a new one.", 400);
     }
 
     if (pending.attempts >= 5) {
-      await PendingClient.deleteOne({ _id: pending._id });
+      await PendingOwner.deleteOne({ _id: pending._id });
       return res.error("Too many attempts. Please request a new OTP.", 400);
     }
 
     const ok = await bcrypt.compare(otp, pending.otpHash);
     if (!ok) {
-      await PendingClient.updateOne(
+      await PendingOwner.updateOne(
         { _id: pending._id },
         { $inc: { attempts: 1 } }
       );
       return res.error("Invalid OTP", 400);
     }
 
-    const newClient = new Client({
+    const newOwner = new Owner({
       username: pending.username,
       email: pending.email,
       password: pending.password,
       emailVerified: true,
     });
-    await newClient.save();
+    await newOwner.save();
 
     const token = jwt.sign(
-      { userId: newClient._id },
+      { userId: newOwner._id },
       process.env.JWT_SECRET || "default_secret",
       { expiresIn: "24h" }
     );
