@@ -49,8 +49,23 @@ async function signup(req, res) {
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
-    await sendOtpEmail(email, otp);
-    return res.success({}, "OTP sent to email", 201);
+    try {
+      await sendOtpEmail(email, otp);
+      return res.success({}, "OTP sent to email", 201);
+    } catch (emailError) {
+      console.error("Email sending failed:", emailError.message);
+
+      // In development, still return success but with a warning
+      if (process.env.NODE_ENV !== 'production') {
+        return res.success({
+          warning: "Email could not be sent. Check console for OTP in development mode.",
+          email: email
+        }, "Registration successful (email failed - check console for OTP)", 201);
+      }
+
+      // In production, return error
+      return res.error("Failed to send verification email. Please try again later.", 503);
+    }
   } catch (error) {
     console.error("Error registering user:", error);
     return res.error(error.message || "Internal Server Error");
