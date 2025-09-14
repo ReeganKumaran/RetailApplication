@@ -1,8 +1,8 @@
 {
   "clientName": "Asha Textiles",
-  "clientPhoneNumber": "9988776655",
-  "clientEmail": "asha@textiles.example",
-  "clientAadhaar": "8888-7777-6666",
+  "phoneNumber": "9988776655",
+  "email": "asha@textiles.example",
+  "aadhar": "8888-7777-6666",
   "itemDetail": {
     "name": "Sherwani",
     "size": "XL",
