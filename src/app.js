@@ -17,7 +17,7 @@ app.use(responseMiddleware);
 // route mounting
 app.use(authRoutes);
 app.use(userRoutes);
-app.use(clientRoutes);
+app.use(rentalRoutes);
 
 app.get("/", async (req, res) => {
   try {
