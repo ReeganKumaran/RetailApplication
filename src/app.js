@@ -8,7 +8,7 @@ const responseMiddleware = require("./middlewares/responseMiddleware");
 // routes
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
-const clientRoutes = require("./routes/clientRoutes");
+const rentalRoutes = require("./routes/rentalRoutes");
 
 app.use(cookieParser());
 app.use(express.json());
