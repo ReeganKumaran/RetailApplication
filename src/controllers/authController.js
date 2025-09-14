@@ -143,7 +143,7 @@ async function login(req, res) {
       return res.error("Email and password are required", 400);
     }
 
-    const user = await Client.findOne({ email });
+    const user = await Owner.findOne({ email });
     if (!user) {
       return res.error("Invalid email or password", 400);
     }
