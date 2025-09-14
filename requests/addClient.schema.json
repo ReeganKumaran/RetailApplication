@@ -13,15 +13,13 @@
   "returnDate": "2025-10-05",
   "notes": "Pack in garment bags",
   "customerDetail": "66f3cdefa0123b456789abcd",
-  "deliveryAddress": [
-    {
-      "street": "4 Cantonment Road",
-      "city": "Kolkata",
-      "state": "WB",
-      "postalCode": "700001",
-      "country": "India",
-      "landmark": "Opp. GPO",
-      "isPrimary": true
-    }
-  ]
+  "deliveryAddress": {
+    "street": "4 Cantonment Road",
+    "city": "Kolkata",
+    "state": "WB",
+    "postalCode": "700001",
+    "country": "India",
+    "landmark": "Opp. GPO",
+    "isPrimary": true
+  }
 }
