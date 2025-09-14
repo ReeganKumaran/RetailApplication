@@ -128,7 +128,7 @@ async function verifySignup(req, res) {
       secure: process.env.NODE_ENV === "production",
     });
 
-    await PendingClient.deleteOne({ _id: pending._id });
+    await PendingOwner.deleteOne({ _id: pending._id });
     return res.success({ token }, "Email verified successfully");
   } catch (error) {
     return res.error(error.message || "Internal Server Error");
