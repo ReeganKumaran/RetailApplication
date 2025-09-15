@@ -1,0 +1,24 @@
+{
+  "clientName": "Rajesh Kumar",
+  "phoneNumber": "9876543210",
+  "email": "rajesh.kumar@example.com",
+  "aadhar": "1234-5678-9012",
+  "itemDetail": {
+    "name": "Wedding Lehenga",
+    "size": "M",
+    "price": 5999,
+    "quantity": 1
+  },
+  "deliveryDate": "2025-10-20",
+  "returnDate": "2025-10-22",
+  "notes": "Handle with care",
+  "deliveryAddress": {
+    "street": "123 Main Street",
+    "city": "Mumbai",
+    "state": "MH",
+    "postalCode": "400001",
+    "country": "India",
+    "landmark": "Near Railway Station",
+    "isPrimary": true
+  }
+}
