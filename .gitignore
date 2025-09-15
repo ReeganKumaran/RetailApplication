@@ -18,12 +18,9 @@ yarn-error.log*
 test-*.js
 test-*.sh
 *test*.js
-test-*.md
 
-# Documentation files generated during testing
-API-TEST-RESULTS.md
-OTP-SOLUTION.md
-rental-api-curls.md
+# All Markdown documentation files
+*.md
 
 # IDE and editor files
 .vscode/

@@ -71,7 +71,7 @@ async function listRentals(req, res) {
 async function addRental(req, res) {
   try {
     const {
-      clientName,
+      customer: customerName,
       phoneNumber = null,
       itemDetail: itemDetailBody,
       item: legacyItemBody,
@@ -81,6 +81,7 @@ async function addRental(req, res) {
       aadhar = null,
       note = null,
       deliveryAddress = null,
+      customerDetail = null,  // New field for customer details
     } = req.body;
     const itemDetail = itemDetailBody || legacyItemBody;
     const customerId = req.user.userId;
@@ -96,7 +97,7 @@ async function addRental(req, res) {
     }
 
     if (
-      !clientName ||
+      !customerName ||
       !itemDetail ||
       !itemDetail.name ||
       !itemDetail.size ||
@@ -108,7 +109,7 @@ async function addRental(req, res) {
     ) {
       // console.log("Hello i am client post api")
       return res.error(
-        "Payload must include clientName, itemDetail{name,size,price,quantity}, and deliveryDate",
+        "Payload must include customer, itemDetail{name,size,price,quantity}, and deliveryDate",
         400
       );
     }
@@ -124,7 +125,7 @@ async function addRental(req, res) {
       // Create new customer
       customer = new CustomerCollection({
         ownerId: customerId,
-        customerName: clientName,
+        customerName: customerName,
         phoneNumber: phoneNumber || "",
         email: email || "",
         aadharNumber: aadhar || "",
@@ -176,7 +177,7 @@ async function addRental(req, res) {
     const rental = new Rental({
       ownerId: customerId,
       customerId: customer._id,  // Add the customer's ID reference
-      clientName,
+      customer: customerName,
       // map API payload fields to schema field names
       clientPhoneNumber: phoneNumber,
       clientEmail: email,
@@ -188,6 +189,8 @@ async function addRental(req, res) {
       returnDate,
       // embedded docs
       deliveryAddress,
+      // Add customerDetail if provided in the request
+      customerDetail: customerDetail || undefined,
     });
     await rental.save();
     return res.success({ id: rental._id }, "Rental added successfully", 201);
@@ -225,6 +228,13 @@ async function editRental(req, res) {
         for (const [subKey, subVal] of Object.entries(value)) {
           if (subVal !== null && subVal !== undefined) {
             update[`itemDetail.${subKey}`] = subVal;
+          }
+        }
+      } else if (key === "customerDetail" && typeof value === "object" && value !== null) {
+        // Flatten nested customerDetail updates to avoid overwriting the entire subdocument
+        for (const [subKey, subVal] of Object.entries(value)) {
+          if (subVal !== null && subVal !== undefined) {
+            update[`customerDetail.${subKey}`] = subVal;
           }
         }
       } else {
@@ -290,7 +300,7 @@ async function editRental(req, res) {
         // Create a new customer record if none exists (edge case)
         customer = new CustomerCollection({
           ownerId: customerId,
-          customerName: updated.clientName,
+          customerName: updated.customer,
           phoneNumber: newPhoneNumber,
           email: update.clientEmail || "",
           aadharNumber: update.clientAadhaar || "",
@@ -338,8 +348,8 @@ async function editRental(req, res) {
       }
 
       // Update other customer details if changed
-      if (update.clientName && update.clientName !== originalRental.clientName) {
-        customer.customerName = update.clientName;
+      if (update.customer && update.customer !== originalRental.customer) {
+        customer.customerName = update.customer;
         needsSave = true;
       }
 

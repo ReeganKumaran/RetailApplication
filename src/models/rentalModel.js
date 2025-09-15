@@ -21,7 +21,7 @@ const RentalSchema = new Schema(
     //   ref: "Rental",
     //   required: true,
     // },
-    clientName: {
+    customer: {
       type: String,
       required: true,
     },
@@ -66,6 +66,22 @@ const RentalSchema = new Schema(
     },
     notes: {
       type: String,
+    },
+    // Customer details (if provided, store directly in rental)
+    customerDetail: {
+      customerName: {
+        type: String,
+      },
+      customerAadhar: {
+        type: String,
+      },
+      customerPhone: {
+        type: String,
+      },
+      customerEmail: {
+        type: String,
+      },
+      customerAddress: addressSchema,
     },
     // relations and address details
     deliveryAddress: addressSchema,
