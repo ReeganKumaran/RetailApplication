@@ -95,19 +95,25 @@ async function addRental(req, res) {
       aadhar = null,
       note = null,
       deliveryAddress = null,
-      customerDetail = null,  // New field for customer details
+      customerDetail = null, // New field for customer details
     } = req.body;
     const itemDetail = itemDetailBody || legacyItemBody;
     const customerId = req.user.userId;
 
     if (!customerId) {
-      return res.error("Authentication error: userId is missing. Please login again.", 401);
+      return res.error(
+        "Authentication error: userId is missing. Please login again.",
+        401
+      );
     }
 
     // Verify that the authenticated user (business owner) exists
     const businessOwner = await Owner.findById(customerId);
     if (!businessOwner) {
-      return res.error("Invalid user: Business owner account not found. Please login again.", 401);
+      return res.error(
+        "Invalid user: Business owner account not found. Please login again.",
+        401
+      );
     }
 
     if (
@@ -131,7 +137,7 @@ async function addRental(req, res) {
     // Find customer by phone number and business owner's customerId
     let customer = await CustomerCollection.findOne({
       ownerId: customerId,
-      phoneNumber: phoneNumber
+      phoneNumber: phoneNumber,
     });
 
     if (!customer) {
@@ -144,9 +150,9 @@ async function addRental(req, res) {
         aadharNumber: aadhar || "",
         address: deliveryAddress ? [deliveryAddress] : [],
         totalRented: 1,
-        totalDelivered: deliveryDate ? 1 : 0,  // If deliveryDate exists, count as delivered
-        totalReturned: returnDate ? 1 : 0,     // If returnDate exists, count as returned
-        activeRentals: returnDate ? 0 : 1,     // If returned, no active rentals, else 1
+        totalDelivered: deliveryDate ? 1 : 0, // If deliveryDate exists, count as delivered
+        totalReturned: returnDate ? 1 : 0, // If returnDate exists, count as returned
+        activeRentals: returnDate ? 0 : 1, // If returned, no active rentals, else 1
         lastRentalDate: new Date(),
       });
     } else {
@@ -175,9 +181,10 @@ async function addRental(req, res) {
 
       // Add new address if provided and not already exists
       if (deliveryAddress) {
-        const addressExists = customer.address.some(addr =>
-          addr.street === deliveryAddress.street &&
-          addr.city === deliveryAddress.city
+        const addressExists = customer.address.some(
+          (addr) =>
+            addr.street === deliveryAddress.street &&
+            addr.city === deliveryAddress.city
         );
         if (!addressExists) {
           customer.address.push(deliveryAddress);
@@ -189,7 +196,7 @@ async function addRental(req, res) {
 
     const rental = new Rental({
       ownerId: customerId,
-      customerId: customer._id,  // Add the customer's ID reference
+      customerId: customer._id, // Add the customer's ID reference
       customer: customerName,
       // map API payload fields to schema field names
       clientPhoneNumber: phoneNumber,
@@ -241,14 +248,22 @@ async function editRental(req, res) {
 
     for (const [key, value] of Object.entries(rawUpdate)) {
       if (value === null || value === undefined) continue;
-      if ((key === "itemDetail" || key === "item") && typeof value === "object" && value !== null) {
+      if (
+        (key === "itemDetail" || key === "item") &&
+        typeof value === "object" &&
+        value !== null
+      ) {
         // Flatten nested itemDetail updates to avoid overwriting the entire subdocument
         for (const [subKey, subVal] of Object.entries(value)) {
           if (subVal !== null && subVal !== undefined) {
             update[`itemDetail.${subKey}`] = subVal;
           }
         }
-      } else if (key === "customerDetail" && typeof value === "object" && value !== null) {
+      } else if (
+        key === "customerDetail" &&
+        typeof value === "object" &&
+        value !== null
+      ) {
         // Flatten nested customerDetail updates to avoid overwriting the entire subdocument
         for (const [subKey, subVal] of Object.entries(value)) {
           if (subVal !== null && subVal !== undefined) {
@@ -261,7 +276,10 @@ async function editRental(req, res) {
     }
 
     // Get the original document to track status changes
-    const originalRental = await Rental.findOne({ _id: id, ownerId: customerId });
+    const originalRental = await Rental.findOne({
+      _id: id,
+      ownerId: customerId,
+    });
     if (!originalRental) {
       return res.error("Rental not found", 404);
     }
@@ -275,17 +293,20 @@ async function editRental(req, res) {
     // Handle phone number changes and update customer statistics
     let customer = await CustomerCollection.findOne({
       ownerId: customerId,
-      phoneNumber: originalRental.clientPhoneNumber
+      phoneNumber: originalRental.clientPhoneNumber,
     });
 
     // If phone number is being changed, handle the customer record migration
-    if (update.clientPhoneNumber && update.clientPhoneNumber !== originalRental.clientPhoneNumber) {
+    if (
+      update.clientPhoneNumber &&
+      update.clientPhoneNumber !== originalRental.clientPhoneNumber
+    ) {
       const newPhoneNumber = update.clientPhoneNumber;
 
       // Check if a customer with the new phone number already exists
       let newCustomer = await CustomerCollection.findOne({
         ownerId: customerId,
-        phoneNumber: newPhoneNumber
+        phoneNumber: newPhoneNumber,
       });
 
       if (newCustomer) {
@@ -354,8 +375,14 @@ async function editRental(req, res) {
       }
 
       // Also check retalStatus for backward compatibility
-      if (update.retalStatus && update.retalStatus !== originalRental.retalStatus) {
-        if (update.retalStatus === "Returned" && originalRental.retalStatus !== "Returned") {
+      if (
+        update.retalStatus &&
+        update.retalStatus !== originalRental.retalStatus
+      ) {
+        if (
+          update.retalStatus === "Returned" &&
+          originalRental.retalStatus !== "Returned"
+        ) {
           // Only increment if returnDate wasn't already handling this
           if (!update.returnDate && !originalRental.returnDate) {
             customer.totalReturned += 1;
@@ -371,12 +398,18 @@ async function editRental(req, res) {
         needsSave = true;
       }
 
-      if (update.clientEmail && update.clientEmail !== originalRental.clientEmail) {
+      if (
+        update.clientEmail &&
+        update.clientEmail !== originalRental.clientEmail
+      ) {
         customer.email = update.clientEmail;
         needsSave = true;
       }
 
-      if (update.clientAadhaar && update.clientAadhaar !== originalRental.clientAadhaar) {
+      if (
+        update.clientAadhaar &&
+        update.clientAadhaar !== originalRental.clientAadhaar
+      ) {
         customer.aadharNumber = update.clientAadhaar;
         needsSave = true;
       }
@@ -427,7 +460,10 @@ async function deleteRental(req, res) {
     const ownerId = req.user.userId;
 
     if (!ownerId) {
-      return res.error("Authentication error: userId is missing. Please login again.", 401);
+      return res.error(
+        "Authentication error: userId is missing. Please login again.",
+        401
+      );
     }
 
     if (!id) {
@@ -438,7 +474,10 @@ async function deleteRental(req, res) {
     const rental = await Rental.findOne({ _id: id, ownerId });
 
     if (!rental) {
-      return res.error("Rental not found or does not belong to your business", 404);
+      return res.error(
+        "Rental not found or does not belong to your business",
+        404
+      );
     }
 
     // Update customer statistics if customer exists
@@ -478,11 +517,15 @@ async function deleteRental(req, res) {
 
 async function deleteCustomer(req, res) {
   try {
-    const customerId = (req.params && req.params.id) || (req.query && req.query.id);
+    const customerId =
+      (req.params && req.params.id) || (req.query && req.query.id);
     const ownerId = req.user.userId;
 
     if (!ownerId) {
-      return res.error("Authentication error: userId is missing. Please login again.", 401);
+      return res.error(
+        "Authentication error: userId is missing. Please login again.",
+        401
+      );
     }
 
     if (!customerId) {
@@ -492,17 +535,20 @@ async function deleteCustomer(req, res) {
     // Verify that the customer belongs to this business owner
     const customer = await CustomerCollection.findOne({
       _id: customerId,
-      ownerId: ownerId
+      ownerId: ownerId,
     });
 
     if (!customer) {
-      return res.error("Customer not found or does not belong to your business", 404);
+      return res.error(
+        "Customer not found or does not belong to your business",
+        404
+      );
     }
 
     // Delete all rentals associated with this customer
     const deleteResult = await Rental.deleteMany({
       customerId: customerId,
-      ownerId: ownerId
+      ownerId: ownerId,
     });
 
     // Delete the customer
@@ -511,7 +557,7 @@ async function deleteCustomer(req, res) {
     return res.success(
       {
         customerId,
-        rentalsDeleted: deleteResult.deletedCount
+        rentalsDeleted: deleteResult.deletedCount,
       },
       `Customer and ${deleteResult.deletedCount} associated rentals deleted successfully`
     );
@@ -528,5 +574,5 @@ module.exports = {
   deleteRental,
   listAllCustomers,
   getCustomerStats,
-  deleteCustomer
+  deleteCustomer,
 };
