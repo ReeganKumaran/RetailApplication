@@ -51,34 +51,17 @@ async function signup(req, res) {
 
     try {
       await sendOtpEmail(email, otp);
-
-      // In development, also log OTP to console
-      if (process.env.NODE_ENV !== 'production') {
-        console.log(`\n========================================`);
-        console.log(`OTP FOR TESTING - Email: ${email}`);
-        console.log(`OTP CODE: ${otp}`);
-        console.log(`========================================\n`);
-      }
-
       return res.success({}, "OTP sent to email", 201);
     } catch (emailError) {
       console.error("Email sending failed:", emailError.message);
 
-      // In development, log OTP to console for testing
-      console.log(`\n========================================`);
-      console.log(`EMAIL FAILED - OTP FOR TESTING`);
-      console.log(`Email: ${email}`);
-      console.log(`OTP CODE: ${otp}`);
-      console.log(`Use this OTP to verify signup`);
-      console.log(`========================================\n`);
-
       // In development, still return success but with a warning
       if (process.env.NODE_ENV !== 'production') {
         return res.success({
-          warning: "Email could not be sent. Check server console for OTP.",
+          warning: "Email could not be sent in development.",
           email: email,
-          devNote: "Check server logs for OTP code"
-        }, "Registration successful (email failed - check console for OTP)", 201);
+          devNote: "Console logging disabled; OTP not printed."
+        }, "Registration successful (email failed in development)", 201);
       }
 
       // In production, return error

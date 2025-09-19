@@ -38,18 +38,8 @@ async function sendOtpEmail(to, otp, actionUrl) {
       subject: `${appName} verification code: ${otp}`,
       html,
     });
-
-    console.log(`OTP email sent successfully to ${to}`);
   } catch (error) {
     console.error("Failed to send OTP email:", error.message);
-
-    // Log the OTP to console as fallback (for development)
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`=== DEVELOPMENT MODE - OTP FALLBACK ===`);
-      console.log(`OTP for ${to}: ${otp}`);
-      console.log(`Action URL: ${actionUrl}`);
-      console.log(`=======================================`);
-    }
 
     // Re-throw the error to let the caller handle it
     throw error;
@@ -57,4 +47,3 @@ async function sendOtpEmail(to, otp, actionUrl) {
 }
 
 module.exports = sendOtpEmail;
-

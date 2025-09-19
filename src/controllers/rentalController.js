@@ -107,7 +107,6 @@ async function addRental(req, res) {
       itemDetail.quantity === null ||
       !deliveryDate
     ) {
-      // console.log("Hello i am client post api")
       return res.error(
         "Payload must include customer, itemDetail{name,size,price,quantity}, and deliveryDate",
         400
@@ -201,20 +200,25 @@ async function addRental(req, res) {
 
 async function editRental(req, res) {
   try {
-    console.log("i am working well ra venna");
     const rawUpdate = req.body || {};
     const update = {};
     const id = (req.params && req.params.id) || (req.query && req.query.id);
     const customerId = req.user.userId;
 
     if (!customerId) {
-      return res.error("Authentication error: userId is missing. Please login again.", 401);
+      return res.error(
+        "Authentication error: userId is missing. Please login again.",
+        401
+      );
     }
 
     // Verify that the authenticated user exists
     const businessOwner = await Owner.findById(customerId);
     if (!businessOwner) {
-      return res.error("Invalid user: Business owner account not found. Please login again.", 401);
+      return res.error(
+        "Invalid user: Business owner account not found. Please login again.",
+        401
+      );
     }
 
     if (!id) {
