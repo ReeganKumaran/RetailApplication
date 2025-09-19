@@ -51,7 +51,12 @@ const RentalSchema = new Schema(
         type: Number,
         required: true,
       },
+      advanceAmount: {
+        type: Number,
+        default: 0,
+      },
     },
+
     retalStatus: {
       type: String,
       enum: ["Pending", "Returned"],

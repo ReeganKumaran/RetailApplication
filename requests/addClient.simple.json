@@ -7,7 +7,8 @@
     "name": "Wedding Lehenga",
     "size": "M",
     "price": 5999,
-    "quantity": 1
+    "quantity": 1,
+    "advanceAmount": 1500
   },
   "deliveryDate": "2025-10-20",
   "returnDate": "2025-10-22",

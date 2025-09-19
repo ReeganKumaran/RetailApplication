@@ -7,7 +7,8 @@
     "name": "Sherwani",
     "size": "XL",
     "price": 3599,
-    "quantity": 4
+    "quantity": 4,
+    "advanceAmount": 1000
   },
   "deliveryDate": "2025-10-01",
   "returnDate": "2025-10-05",

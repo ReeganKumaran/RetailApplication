@@ -8,7 +8,8 @@
     "name": "Designer Lehenga",
     "size": "S",
     "price": 7999,
-    "quantity": 1
+    "quantity": 1,
+    "advanceAmount": 2000
   },
   "deliveryDate": "2025-10-15T09:00:00.000Z",
   "returnDate": "2025-10-18T18:30:00.000Z",
