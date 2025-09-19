@@ -431,9 +431,53 @@ async function editRental(req, res) {
 async function listAllCustomers(req, res) {
   try {
     const customerId = req.user.userId;
-    const customers = await CustomerCollection.find({ ownerId: customerId })
-      .sort({ lastRentalDate: -1 });
-    return res.success(customers, "Customers fetched successfully");
+    const customers = await CustomerCollection.find({
+      ownerId: customerId,
+    }).sort({ lastRentalDate: -1 });
+
+    // Calculate total rent for each customer
+    const customersWithTotalRent = await Promise.all(
+      customers.map(async (customer) => {
+        const rentals = await Rental.find({
+          ownerId: customerId,
+          customerId: customer._id
+        });
+        let totalRent = 0;
+        rentals.forEach(rental => {
+          if (rental.itemDetail && rental.retalStatus === "Pending") { // Only calculate for pending rentals
+            const price = rental.itemDetail.price || 0;
+            const quantity = rental.itemDetail.quantity || 0;
+            const advanceAmount = rental.itemDetail.advanceAmount || 0;
+
+            if (rental.deliveryDate) {
+              const endDate = new Date(); // Use current date for pending rentals
+              const startDate = new Date(rental.deliveryDate);
+              const diffMs = endDate - startDate;
+              const days = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+
+              const rentalAmount = (price * quantity * days) - advanceAmount;
+              totalRent += rentalAmount;
+            }
+          }
+        });
+        
+
+        return {
+          ...customer.toObject(),
+          totalRent
+        };
+      })
+    );
+
+    // Calculate sum of all customers' total rent
+    const totalSumOfAllCustomers = customersWithTotalRent.reduce((sum, customer) => {
+      return sum + (customer.totalRent || 0);
+    }, 0);
+
+    return res.success({
+      customers: customersWithTotalRent,
+      totalSumOfAllCustomers
+    }, "Customers fetched successfully");
   } catch (error) {
     console.error("Error fetching customers:", error);
     return res.error(error.message || "Internal Server Error");
