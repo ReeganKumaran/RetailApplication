@@ -487,11 +487,16 @@ async function listAllCustomers(req, res) {
 async function getCustomerStats(req, res) {
   try {
     const customerId = req.user.userId;
-    const customerStats = await CustomerCollection.findOne({ ownerId: customerId });
+    const customerStats = await CustomerCollection.findOne({
+      ownerId: customerId,
+    });
     if (!customerStats) {
       return res.error("Customer not found", 404);
     }
-    return res.success(customerStats, "Customer statistics fetched successfully");
+    return res.success(
+      customerStats,
+      "Customer statistics fetched successfully"
+    );
   } catch (error) {
     console.error("Error fetching customer stats:", error);
     return res.error(error.message || "Internal Server Error");
