@@ -5,17 +5,23 @@ const Owner = require("../models/ownerModel");
 async function listRentals(req, res) {
   try {
     const businessOwnerId = req.user.userId;
-    const clientId = (req.query && req.query.id) || (req.params && req.params.id) || null;
+    const clientId =
+      (req.query && req.query.id) || (req.params && req.params.id) || null;
+    const retalStatus = req.query && req.query.retalStatus || null;
     const page = parseInt(req.query && req.query.page) || 1;
     const limit = parseInt(req.query && req.query.limit) || null;
     const skip = limit ? (page - 1) * limit : 0;
 
-    if (!businessOwnerId) return res.error("userID is missing please login again", 401);
+    if (!businessOwnerId)
+      return res.error("userID is missing please login again", 401);
 
     // Verify that the authenticated user exists
     const businessOwner = await Owner.findById(businessOwnerId);
     if (!businessOwner) {
-      return res.error("Invalid user: Business owner account not found. Please login again.", 401);
+      return res.error(
+        "Invalid user: Business owner account not found. Please login again.",
+        401
+      );
     }
 
     // Build query - always filter by business owner
@@ -26,15 +32,23 @@ async function listRentals(req, res) {
       // First verify this customer belongs to this business owner
       const customer = await CustomerCollection.findOne({
         _id: clientId,
-        ownerId: businessOwnerId
+        ownerId: businessOwnerId,
       });
 
       if (!customer) {
-        return res.error("Customer not found or does not belong to your business", 404);
+        return res.error(
+          "Customer not found or does not belong to your business",
+          404
+        );
       }
 
       // Find all rentals for this specific customer by customerId
       query.customerId = clientId;
+    }
+
+    // If rental status filter is provided, add it to query
+    if (retalStatus) {
+      query.retalStatus = retalStatus;
     }
 
     const rentals = await Rental.find(query)
@@ -52,8 +66,8 @@ async function listRentals(req, res) {
         page: page,
         limit: limit,
         total: totalCount,
-        totalPages: limit ? Math.ceil(totalCount / limit) : 1
-      }
+        totalPages: limit ? Math.ceil(totalCount / limit) : 1,
+      },
     };
 
     if (clientId) {
