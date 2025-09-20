@@ -9,6 +9,7 @@ const responseMiddleware = require("./middlewares/responseMiddleware");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const rentalRoutes = require("./routes/rentalRoutes");
+const itemRoutes = require("./routes/itemRouter");
 
 app.use(cookieParser());
 app.use(express.json());
@@ -18,6 +19,7 @@ app.use(responseMiddleware);
 app.use(authRoutes);
 app.use(userRoutes);
 app.use(rentalRoutes);
+app.use(itemRoutes);
 
 app.get("/", async (req, res) => {
   try {
