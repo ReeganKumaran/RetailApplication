@@ -7,7 +7,7 @@ async function listRentals(req, res) {
     const businessOwnerId = req.user.userId;
     const clientId =
       (req.query && req.query.id) || (req.params && req.params.id) || null;
-    const retalStatus = req.query && req.query.retalStatus || null;
+    const retalStatus = (req.query && req.query.retalStatus) || null;
     const page = parseInt(req.query && req.query.page) || 1;
     const limit = parseInt(req.query && req.query.limit) || null;
     const skip = limit ? (page - 1) * limit : 0;
@@ -115,7 +115,7 @@ async function addRental(req, res) {
         401
       );
     }
-
+    
     if (
       !customerName ||
       !itemDetail ||
