@@ -41,6 +41,7 @@ async function updateItem(req, res) {
     const ownerId = req.user.userId;
     const itemId =
       (req.params && req.params.id) || (req.query && req.query.id) || null;
+    const { itemName, quantity } = req.body;
     const missingFields = [];
     if (!itemName) missingFields.push("itemName");
     if (!quantity) missingFields.push("quantity");
@@ -52,7 +53,7 @@ async function updateItem(req, res) {
       { _id: ownerId, "items._id": itemId },
       {
         $set: {
-          "items.$.items": itemName,
+          "items.$.itemName": itemName,
           "items.$.quantity": quantity,
         },
       }
