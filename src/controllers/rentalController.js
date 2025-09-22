@@ -7,7 +7,7 @@ async function listRentals(req, res) {
     const businessOwnerId = req.user.userId;
     const clientId =
       (req.query && req.query.id) || (req.params && req.params.id) || null;
-    const retalStatus = (req.query && req.query.retalStatus) || null;
+    const rentalStatus = (req.query && req.query.rentalStatus) || null;
     const page = parseInt(req.query && req.query.page) || 1;
     const limit = parseInt(req.query && req.query.limit) || null;
     const skip = limit ? (page - 1) * limit : 0;
@@ -47,8 +47,8 @@ async function listRentals(req, res) {
     }
 
     // If rental status filter is provided, add it to query
-    if (retalStatus) {
-      query.retalStatus = retalStatus;
+    if (rentalStatus) {
+      query.rentalStatus = rentalStatus;
     }
 
     const rentals = await Rental.find(query)
@@ -374,14 +374,14 @@ async function editRental(req, res) {
         needsSave = true;
       }
 
-      // Also check retalStatus for backward compatibility
+      // Also check rentalStatus for backward compatibility
       if (
-        update.retalStatus &&
-        update.retalStatus !== originalRental.retalStatus
+        update.rentalStatus &&
+        update.rentalStatus !== originalRental.rentalStatus
       ) {
         if (
-          update.retalStatus === "Returned" &&
-          originalRental.retalStatus !== "Returned"
+          update.rentalStatus === "Returned" &&
+          originalRental.rentalStatus !== "Returned"
         ) {
           // Only increment if returnDate wasn't already handling this
           if (!update.returnDate && !originalRental.returnDate) {
@@ -444,7 +444,7 @@ async function listAllCustomers(req, res) {
         });
         let totalRent = 0;
         rentals.forEach((rental) => {
-          if (rental.itemDetail && rental.retalStatus === "Pending") {
+          if (rental.itemDetail && rental.rentalStatus === "Pending") {
             // Only calculate for pending rentals
             const price = rental.itemDetail.price || 0;
             const quantity = rental.itemDetail.quantity || 0;

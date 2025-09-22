@@ -57,7 +57,7 @@ const RentalSchema = new Schema(
       },
     },
 
-    retalStatus: {
+    rentalStatus: {
       type: String,
       enum: ["Pending", "Returned"],
       default: "Pending",
@@ -151,14 +151,14 @@ RentalSchema.virtual("totalRent").get(function () {
   return price * qty * (Number.isFinite(days) ? days : 0);
 });
 
-// Validation and auto-update retalStatus
+// Validation and auto-update rentalStatus
 RentalSchema.pre("save", function (next) {
   try {
-    // Auto-update retalStatus based on returnDate
+    // Auto-update rentalStatus based on returnDate
     if (this.returnDate) {
-      this.retalStatus = "Returned";
+      this.rentalStatus = "Returned";
     } else {
-      this.retalStatus = "Pending";
+      this.rentalStatus = "Pending";
     }
 
     // Validate dates
@@ -182,11 +182,11 @@ RentalSchema.pre("findOneAndUpdate", async function (next) {
     const update = this.getUpdate() || {};
     const set = update.$set || update;
 
-    // Auto-update retalStatus based on returnDate in updates
+    // Auto-update rentalStatus based on returnDate in updates
     if (set.returnDate) {
-      set.retalStatus = "Returned";
+      set.rentalStatus = "Returned";
     } else if (set.returnDate === null) {
-      set.retalStatus = "Pending";
+      set.rentalStatus = "Pending";
     }
 
     // Validate dates
