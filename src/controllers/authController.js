@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-
+import crypto from "crypto";
 const Owner = require("../models/ownerModel");
 const PendingOwner = require("../models/pendingEmailVerfication");
 const sendOtpEmail = require("../services/email/sendOtp");
@@ -171,4 +171,15 @@ async function login(req, res) {
   }
 }
 
+async function forgotPassword(req, res) {
+  try {
+    const {email} = req.body;
+    const user = await Owner.findOne({email});
+    if(!user) throw new Error("User not found")
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+  } catch (error) {
+    res.error(error.message ||"Internal Server Error")
+  }
+}
 module.exports = { signup, verifySignup, login };
