@@ -1,21 +1,7 @@
-const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-  tls: {
-    rejectUnauthorized: false, // Allow self-signed certificates
-  },
-  connectionTimeout: 5000, // 5 seconds connection timeout
-  greetingTimeout: 5000,   // 5 seconds greeting timeout
-  socketTimeout: 10000,    // 10 seconds socket timeout
-});
+const transporter = require("./transporter");
 
 async function sendOtpEmail(to, otp, actionUrl) {
   const appName = "SRK Retail";
