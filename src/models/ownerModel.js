@@ -17,6 +17,9 @@ const ownerSchema = new Schema(
         { _id: true }
       ),
     ],
+    resetPasswordExpire: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
