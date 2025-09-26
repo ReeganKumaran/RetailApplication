@@ -174,13 +174,34 @@ async function login(req, res) {
 
 async function forgotPassword(req, res) {
   try {
-    const {email} = req.body;
-    const user = await Owner.findOne({email});
-    if(!user) throw new Error("User not found")
-    const resetToken = crypto.randomBytes(32).toString("hex");
+    const { email } = req.body;
+    if (!email) {
+      return res.error("Email is required", 400);
+    }
 
+    const user = await Owner.findOne({ email });
+    if (!user) {
+      return res.error("User not found", 404);
+    }
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+    await user.save();
+
+    const baseUrl =
+      process.env.PASSWORD_RESET_URL || "http://yourfrontend.com/reset-password";
+    const resetUrl = `${baseUrl}/${resetToken}`;
+
+    await sendResetPasswordEmail(user.email, resetToken, resetUrl, {
+      expiresInMinutes: 15,
+    });
+
+    return res.success({}, "Password reset instructions sent to email");
   } catch (error) {
-    res.error(error.message ||"Internal Server Error")
+    console.error("Error processing forgot password:", error);
+    return res.error(error.message || "Internal Server Error");
   }
 }
-module.exports = { signup, verifySignup, login };
+
+module.exports = { signup, verifySignup, login, forgotPassword };
