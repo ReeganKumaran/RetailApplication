@@ -17,6 +17,9 @@ const ownerSchema = new Schema(
         { _id: true }
       ),
     ],
+    resetPasswordToken: {
+      type: String,
+    },
     resetPasswordExpire: {
       type: Date,
     },
