@@ -1,9 +1,10 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-import crypto from "crypto";
+const crypto = require("crypto");
 const Owner = require("../models/ownerModel");
 const PendingOwner = require("../models/pendingEmailVerfication");
 const sendOtpEmail = require("../services/email/sendOtp");
+const sendResetPasswordEmail = require("../services/email/sendResetPassword");
 const { isValidEmail, isValidPassword } = require("../helper/helper");
 
 async function signup(req, res) {
