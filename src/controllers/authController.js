@@ -57,16 +57,23 @@ async function signup(req, res) {
       console.error("Email sending failed:", emailError.message);
 
       // In development, still return success but with a warning
-      if (process.env.NODE_ENV !== 'production') {
-        return res.success({
-          warning: "Email could not be sent in development.",
-          email: email,
-          devNote: "Console logging disabled; OTP not printed."
-        }, "Registration successful (email failed in development)", 201);
+      if (process.env.NODE_ENV !== "production") {
+        return res.success(
+          {
+            warning: "Email could not be sent in development.",
+            email: email,
+            devNote: "Console logging disabled; OTP not printed.",
+          },
+          "Registration successful (email failed in development)",
+          201
+        );
       }
 
       // In production, return error
-      return res.error("Failed to send verification email. Please try again later.", 503);
+      return res.error(
+        "Failed to send verification email. Please try again later.",
+        503
+      );
     }
   } catch (error) {
     console.error("Error registering user:", error);
@@ -89,7 +96,10 @@ async function verifySignup(req, res) {
 
     const pending = await PendingOwner.findOne({ email });
     if (!pending) {
-      return res.error("No pending verification. Please request a new OTP.", 400);
+      return res.error(
+        "No pending verification. Please request a new OTP.",
+        400
+      );
     }
 
     if (pending.expiresAt < new Date()) {
