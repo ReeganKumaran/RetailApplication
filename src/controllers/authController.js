@@ -214,5 +214,47 @@ async function forgotPassword(req, res) {
     return res.error(error.message || "Internal Server Error");
   }
 }
+// function findIsExpire({date , time}){
+//   const isExpire = date > new Date 
+// }
+async function resetPassword(req, res) {
+  try {
+    const { email, newPassword, token } = req.body;
 
-module.exports = { signup, verifySignup, login, forgotPassword };
+    // 1. Check required fields
+    if (!email || !newPassword || !token) {
+      return res.status(400).json({ message: "Email, token, and new password are required" });
+    }
+
+    // 2. Find user
+    const user = await Owner.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 3. Validate token and expiry
+    if (!user.resetPasswordToken || user.resetPasswordToken !== token) {
+      return res.status(400).json({ message: "Invalid token" });
+    }
+
+    if (user.resetPasswordExpire < Date.now()) {
+      return res.status(400).json({ message: "Token has expired" });
+    }
+
+    // 4. Hash the new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    // 5. Clear reset fields
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    return res.json({ message: "Password has been reset successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+}
+module.exports = { signup, verifySignup, login, forgotPassword, resetPassword };
