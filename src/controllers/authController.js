@@ -200,7 +200,8 @@ async function forgotPassword(req, res) {
     await user.save();
 
     const baseUrl =
-      process.env.PASSWORD_RESET_URL || "http://yourfrontend.com/reset-password";
+      process.env.PASSWORD_RESET_URL ||
+      "http://yourfrontend.com/reset-password";
     const resetUrl = `${baseUrl}/${resetToken}`;
 
     await sendResetPasswordEmail(user.email, resetToken, resetUrl, {
