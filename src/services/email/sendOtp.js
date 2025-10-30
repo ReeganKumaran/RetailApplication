@@ -18,14 +18,25 @@ async function sendOtpEmail(to, otp, actionUrl) {
       .replaceAll("{{supportEmail}}", supportEmail)
       .replaceAll("{{year}}", String(new Date().getFullYear()));
 
+    const fromEmail = process.env.SMTP_USER || process.env.GMAIL_USER;
+
+    if (!fromEmail) {
+      throw new Error("SMTP_USER or GMAIL_USER environment variable is not configured");
+    }
+
     await transporter.sendMail({
-      from: `"${appName}" <${process.env.GMAIL_USER}>`,
+      from: `"${appName}" <${fromEmail}>`,
       to,
       subject: `${appName} verification code: ${otp}`,
       html,
     });
   } catch (error) {
     console.error("Failed to send OTP email:", error.message);
+    console.error("SMTP Config Check:", {
+      host: process.env.SMTP_HOST || "smtp.gmail.com",
+      port: process.env.SMTP_PORT || "587",
+      user: process.env.SMTP_USER || process.env.GMAIL_USER || "NOT_SET"
+    });
 
     // Re-throw the error to let the caller handle it
     throw error;
