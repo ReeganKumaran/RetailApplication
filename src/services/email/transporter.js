@@ -13,9 +13,9 @@ const transporter = nodemailer.createTransport({
   tls: {
     rejectUnauthorized: process.env.SMTP_TLS_REJECT_UNAUTHORIZED !== "false",
   },
-  connectionTimeout: parseInt(process.env.SMTP_CONNECTION_TIMEOUT || "10000"),
-  greetingTimeout: parseInt(process.env.SMTP_GREETING_TIMEOUT || "10000"),
-  socketTimeout: parseInt(process.env.SMTP_SOCKET_TIMEOUT || "20000"),
+  connectionTimeout: parseInt(process.env.SMTP_CONNECTION_TIMEOUT || "60000"),
+  greetingTimeout: parseInt(process.env.SMTP_GREETING_TIMEOUT || "60000"),
+  socketTimeout: parseInt(process.env.SMTP_SOCKET_TIMEOUT || "60000"),
 });
 
 module.exports = transporter;
