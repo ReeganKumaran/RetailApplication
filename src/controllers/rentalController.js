@@ -5,11 +5,12 @@ const Owner = require("../models/ownerModel");
 async function listRentals(req, res) {
   try {
     const businessOwnerId = req.user.userId;
-    const clientId =
-      (req.query && req.query.id) || (req.params && req.params.id) || null;
+    const customerId =
+      (req.query && req.query.customerId) || (req.params && req.params.customerId) || null;
     const rentalStatus = (req.query && req.query.rentalStatus) || null;
     const page = parseInt(req.query && req.query.page) || 1;
     const limit = parseInt(req.query && req.query.limit) || null;
+    const search = req.query && req.query.search ? req.query.search : null;
     const skip = limit ? (page - 1) * limit : 0;
 
     if (!businessOwnerId)
@@ -28,10 +29,10 @@ async function listRentals(req, res) {
     const query = { ownerId: businessOwnerId };
 
     // If a specific client ID is provided, filter rentals for that customer
-    if (clientId) {
+    if (customerId) {
       // First verify this customer belongs to this business owner
       const customer = await CustomerCollection.findOne({
-        _id: clientId,
+        _id: customerId,
         ownerId: businessOwnerId,
       });
 
@@ -43,12 +44,41 @@ async function listRentals(req, res) {
       }
 
       // Find all rentals for this specific customer by customerId
-      query.customerId = clientId;
+      query.customerId = customerId;
     }
 
     // If rental status filter is provided, add it to query
     if (rentalStatus) {
       query.rentalStatus = rentalStatus;
+    }
+
+    // Add search functionality
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+
+      // Search in customer collection to get matching customer IDs
+      const matchingCustomers = await CustomerCollection.find(
+        {
+          ownerId: businessOwnerId,
+          $or: [
+            { customerName: searchRegex },
+            { email: searchRegex },
+            { phoneNumber: searchRegex },
+          ],
+        },
+        { _id: 1 }
+      );
+
+      const customerIds = matchingCustomers.map((c) => c._id);
+
+      // Add search conditions to the query
+      query.$or = [
+        { customerId: { $in: customerIds } },
+        { customer: searchRegex },
+        { rentalId: searchRegex },
+        { clientPhoneNumber: searchRegex },
+        { clientEmail: searchRegex },
+      ];
     }
 
     const rentals = await Rental.find(query)
@@ -70,8 +100,8 @@ async function listRentals(req, res) {
       },
     };
 
-    if (clientId) {
-      const customer = await CustomerCollection.findById(clientId);
+    if (customerId) {
+      const customer = await CustomerCollection.findById(customerId);
       response.customer = customer;
     }
 
@@ -115,7 +145,7 @@ async function addRental(req, res) {
         401
       );
     }
-    
+
     if (
       !customerName ||
       !itemDetail ||
@@ -223,7 +253,7 @@ async function editRental(req, res) {
   try {
     const rawUpdate = req.body || {};
     const update = {};
-    const id = (req.params && req.params.id) || (req.query && req.query.id);
+    const id = (req.params && req.params.id) || (req.query && req.query.customerId);
     const customerId = req.user.userId;
 
     if (!customerId) {
@@ -431,9 +461,23 @@ async function editRental(req, res) {
 async function listAllCustomers(req, res) {
   try {
     const customerId = req.user.userId;
-    const customers = await CustomerCollection.find({
-      ownerId: customerId,
-    }).sort({ lastRentalDate: -1 });
+    const search = req.query && req.query.search ? req.query.search : null;
+
+    // Build query for customers
+    const query = { ownerId: customerId };
+
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      query.$or = [
+        { customerName: searchRegex },
+        { email: searchRegex },
+        { phoneNumber: searchRegex },
+      ];
+    }
+
+    const customers = await CustomerCollection.find(query).sort({
+      lastRentalDate: -1,
+    });
 
     // Calculate total rent for each customer
     const customersWithTotalRent = await Promise.all(
@@ -511,7 +555,7 @@ async function getCustomerStats(req, res) {
 
 async function deleteRental(req, res) {
   try {
-    const id = (req.params && req.params.id) || (req.query && req.query.id);
+    const id = (req.params && req.params.customerId) || (req.query && req.query.customerId);
     const ownerId = req.user.userId;
 
     if (!ownerId) {
