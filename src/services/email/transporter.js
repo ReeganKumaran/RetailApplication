@@ -3,17 +3,19 @@ require("dotenv").config();
 
 // Shared Nodemailer transporter used by all email services.
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.SMTP_PORT || "587"),
+  secure: process.env.SMTP_SECURE === "true",
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
+    user: process.env.SMTP_USER || process.env.GMAIL_USER,
+    pass: process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD,
   },
   tls: {
-    rejectUnauthorized: false,
+    rejectUnauthorized: process.env.SMTP_TLS_REJECT_UNAUTHORIZED !== "false",
   },
-  connectionTimeout: 5000,
-  greetingTimeout: 5000,
-  socketTimeout: 10000,
+  connectionTimeout: parseInt(process.env.SMTP_CONNECTION_TIMEOUT || "10000"),
+  greetingTimeout: parseInt(process.env.SMTP_GREETING_TIMEOUT || "10000"),
+  socketTimeout: parseInt(process.env.SMTP_SOCKET_TIMEOUT || "20000"),
 });
 
 module.exports = transporter;
