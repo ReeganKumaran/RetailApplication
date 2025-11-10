@@ -1,21 +1,26 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require('resend');
 require("dotenv").config();
 
-// Shared Nodemailer transporter used by all email services.
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || "smtp.gmail.com",
-  port: parseInt(process.env.SMTP_PORT || "587"),
-  secure: process.env.SMTP_SECURE === "true",
-  auth: {
-    user: process.env.SMTP_USER || process.env.GMAIL_USER,
-    pass: process.env.SMTP_PASS || process.env.GMAIL_APP_PASSWORD,
-  },
-  tls: {
-    rejectUnauthorized: process.env.SMTP_TLS_REJECT_UNAUTHORIZED !== "false",
-  },
-  connectionTimeout: parseInt(process.env.SMTP_CONNECTION_TIMEOUT || "60000"),
-  greetingTimeout: parseInt(process.env.SMTP_GREETING_TIMEOUT || "60000"),
-  socketTimeout: parseInt(process.env.SMTP_SOCKET_TIMEOUT || "60000"),
-});
+// Initialize Resend client with API key from environment
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Wrapper to maintain compatibility with existing nodemailer-style code
+const transporter = {
+  sendMail: async (mailOptions) => {
+    try {
+      console.log("Using Resend for email sending");
+      const data = await resend.emails.send({
+        from: mailOptions.from || process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+        to: mailOptions.to,
+        subject: mailOptions.subject,
+        html: mailOptions.html,
+        text: mailOptions.text,
+      });
+      return data;
+    } catch (error) {
+      throw error;
+    }
+  }
+};
 
 module.exports = transporter;

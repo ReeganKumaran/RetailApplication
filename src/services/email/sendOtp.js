@@ -18,10 +18,10 @@ async function sendOtpEmail(to, otp, actionUrl) {
       .replaceAll("{{supportEmail}}", supportEmail)
       .replaceAll("{{year}}", String(new Date().getFullYear()));
 
-    const fromEmail = process.env.SMTP_USER || process.env.GMAIL_USER;
+    const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.SMTP_USER || process.env.GMAIL_USER;
 
     if (!fromEmail) {
-      throw new Error("SMTP_USER or GMAIL_USER environment variable is not configured");
+      throw new Error("RESEND_FROM_EMAIL, SMTP_USER, or GMAIL_USER environment variable is not configured");
     }
 
     await transporter.sendMail({

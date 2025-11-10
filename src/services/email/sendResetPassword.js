@@ -24,8 +24,14 @@ async function sendResetPasswordEmail(to, token, resetUrl, options = {}) {
       .replaceAll("{{expiresInMinutes}}", String(expiresInMinutes))
       .replaceAll("{{year}}", String(new Date().getFullYear()));
 
+    const fromEmail = process.env.RESEND_FROM_EMAIL || process.env.SMTP_USER || process.env.GMAIL_USER;
+
+    if (!fromEmail) {
+      throw new Error("RESEND_FROM_EMAIL, SMTP_USER, or GMAIL_USER environment variable is not configured");
+    }
+
     await transporter.sendMail({
-      from: `"${appName}" <${process.env.GMAIL_USER}>`,
+      from: `"${appName}" <${fromEmail}>`,
       to,
       subject: `${appName} password reset instructions`,
       html,
