@@ -1,23 +1,25 @@
-const { Resend } = require('resend');
+const sgMail = require('@sendgrid/mail');
 require("dotenv").config();
 
-// Initialize Resend client with API key from environment
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Initialize SendGrid with API key from environment
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Wrapper to maintain compatibility with existing nodemailer-style code
 const transporter = {
   sendMail: async (mailOptions) => {
     try {
-      console.log("Using Resend for email sending");
-      const data = await resend.emails.send({
-        from: mailOptions.from || process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+      console.log("Using SendGrid for email sending");
+      const msg = {
+        from: mailOptions.from || process.env.SENDGRID_FROM_EMAIL,
         to: mailOptions.to,
         subject: mailOptions.subject,
         html: mailOptions.html,
         text: mailOptions.text,
-      });
-      return data;
+      };
+      const response = await sgMail.send(msg);
+      return response;
     } catch (error) {
+      console.error('SendGrid Error:', error.response ? error.response.body : error.message);
       throw error;
     }
   }
