@@ -8,6 +8,7 @@ const {
   listAllCustomers,
   deleteCustomer,
 } = require("../controllers/rentalController");
+const { generateInvoicePDF } = require("../controllers/pdfController");
 
 const rentalRouter = express.Router();
 
@@ -28,5 +29,8 @@ rentalRouter.delete("/rentals", deleteRental);
 rentalRouter.get("/customers", listAllCustomers);
 rentalRouter.delete("/customers/:id", deleteCustomer);
 rentalRouter.delete("/customers", deleteCustomer);
+
+// PDF Generation route
+rentalRouter.post("/generate-invoice-pdf", generateInvoicePDF);
 
 module.exports = rentalRouter;
