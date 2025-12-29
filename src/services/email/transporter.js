@@ -1,28 +1,31 @@
-const sgMail = require('@sendgrid/mail');
+const nodemailer = require('nodemailer');
 require("dotenv").config();
 
-// Initialize SendGrid with API key from environment
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+// Create Gmail SMTP transporter
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false, // Use TLS
+  auth: {
+    user: process.env.SMTP_USERNAME,
+    pass: process.env.SMTP_PASSWORD,
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: parseInt(process.env.SMTP_CONNECTION_TIMEOUT) || 60000,
+  greetingTimeout: parseInt(process.env.SMTP_GREETING_TIMEOUT) || 60000,
+  socketTimeout: parseInt(process.env.SMTP_SOCKET_TIMEOUT) || 60000,
+});
 
-// Wrapper to maintain compatibility with existing nodemailer-style code
-const transporter = {
-  sendMail: async (mailOptions) => {
-    try {
-      console.log("Using SendGrid for email sending");
-      const msg = {
-        from: mailOptions.from || process.env.SENDGRID_FROM_EMAIL,
-        to: mailOptions.to,
-        subject: mailOptions.subject,
-        html: mailOptions.html,
-        text: mailOptions.text,
-      };
-      const response = await sgMail.send(msg);
-      return response;
-    } catch (error) {
-      console.error('SendGrid Error:', error.response ? error.response.body : error.message);
-      throw error;
-    }
+// Verify transporter configuration
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('Gmail SMTP configuration error:', error);
+  } else {
+    console.log('Gmail SMTP server is ready to send emails');
   }
-};
+});
 
 module.exports = transporter;

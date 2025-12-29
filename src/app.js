@@ -2,9 +2,10 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const app = express();
 const cors = require("cors");
-  
+
 app.use(cors());
 // middlewares
+const { requestLogger } = require("./helper/logger");
 const responseMiddleware = require("./middlewares/responseMiddleware");
 
 // routes
@@ -15,6 +16,7 @@ const itemRoutes = require("./routes/itemRouter");
 
 app.use(cookieParser());
 app.use(express.json());
+app.use(requestLogger);
 app.use(responseMiddleware);
 
 // route mounting

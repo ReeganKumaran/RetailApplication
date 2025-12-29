@@ -6,7 +6,7 @@ const transporter = require("./transporter");
 async function sendOtpEmail(to, otp, actionUrl) {
   const appName = "SRK Retail";
   const supportEmail = "support@srkretail.com";
- console.log("Using SendGrid for email sending");
+  console.log("Using Gmail SMTP for email sending");
   try {
     const templatePath = path.join(__dirname, "templates", "otp.html");
 
@@ -18,10 +18,10 @@ async function sendOtpEmail(to, otp, actionUrl) {
       .replaceAll("{{supportEmail}}", supportEmail)
       .replaceAll("{{year}}", String(new Date().getFullYear()));
 
-    const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || process.env.SMTP_USER || process.env.GMAIL_USER;
+    const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USERNAME;
 
     if (!fromEmail) {
-      throw new Error("SENDGRID_FROM_EMAIL, RESEND_FROM_EMAIL, SMTP_USER, or GMAIL_USER environment variable is not configured");
+      throw new Error("FROM_EMAIL or SMTP_USERNAME environment variable is not configured");
     }
 
     await transporter.sendMail({

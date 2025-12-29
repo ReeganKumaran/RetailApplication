@@ -11,7 +11,7 @@ async function sendResetPasswordEmail(to, token, resetUrl, options = {}) {
   const appName = options.appName || "SRK Retail";
   const supportEmail = options.supportEmail || "support@srkretail.com";
   const expiresInMinutes = options.expiresInMinutes || 15;
- console.log("Using SendGrid for email sending");
+  console.log("Using Gmail SMTP for email sending");
   try {
     const templatePath = path.join(__dirname, "templates", "reset-password.html");
     const htmlTemplate = fs.readFileSync(templatePath, "utf8");
@@ -24,10 +24,10 @@ async function sendResetPasswordEmail(to, token, resetUrl, options = {}) {
       .replaceAll("{{expiresInMinutes}}", String(expiresInMinutes))
       .replaceAll("{{year}}", String(new Date().getFullYear()));
 
-    const fromEmail = process.env.SENDGRID_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || process.env.SMTP_USER || process.env.GMAIL_USER;
+    const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USERNAME;
 
     if (!fromEmail) {
-      throw new Error("SENDGRID_FROM_EMAIL, RESEND_FROM_EMAIL, SMTP_USER, or GMAIL_USER environment variable is not configured");
+      throw new Error("FROM_EMAIL or SMTP_USERNAME environment variable is not configured");
     }
 
     await transporter.sendMail({
