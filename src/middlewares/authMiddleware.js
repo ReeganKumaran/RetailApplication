@@ -1,14 +1,20 @@
 const jwt = require("jsonwebtoken");
 
 const authMiddleware = (req, res, next) => {
-  // let token = "";
-  // if(req.cookies[token]){
-  //   token = 
-  // }  
+  // Try to get token from multiple sources:
+  // 1. Authorization header (Bearer token)
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1];
+  let token = authHeader && authHeader.split(" ")[1];
 
-  // const token = req.cookies["token"];
+  // 2. Query parameter (for GET requests with token in URL)
+  if (!token && req.query.token) {
+    token = req.query.token;
+  }
+
+  // 3. Cookie (legacy support)
+  if (!token && req.cookies["token"]) {
+    token = req.cookies["token"];
+  }
 
   if (!token) {
     return res.status(401).send("Unauthorized");

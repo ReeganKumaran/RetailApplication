@@ -94,14 +94,14 @@ const requestLogger = (req, res, next) => {
   // Log incoming request
   logger.http(
     `${req.method} ${req.originalUrl || req.url}`
-    //   ,{
-    //   method: req.method,
-    //   url: req.originalUrl || req.url,
-    //   ip: req.ip || req.connection.remoteAddress,
-    //   userAgent: req.get('user-agent'),
-    //   query: req.query,
-    //   body: req.method !== 'GET' ? req.body : undefined,
-    // }
+      ,{
+      method: req.method,
+      url: req.originalUrl || req.url,
+      ip: req.ip || req.connection.remoteAddress,
+      userAgent: req.get('user-agent'),
+      query: req.query,
+      body: req.method !== 'GET' ? req.body : undefined,
+    }
   );
 
   // Capture response
@@ -112,12 +112,12 @@ const requestLogger = (req, res, next) => {
       `${req.method} ${req.originalUrl || req.url} - ${
         res.statusCode
       } - ${duration}ms`,
-      // {
-      //   method: req.method,
-      //   url: req.originalUrl || req.url,
-      //   statusCode: res.statusCode,
-      //   duration: `${duration}ms`,
-      // }
+      {
+        method: req.method,
+        url: req.originalUrl || req.url,
+        statusCode: res.statusCode,
+        duration: `${duration}ms`,
+      }
     );
     res.send = originalSend;
     return originalSend.call(this, data);

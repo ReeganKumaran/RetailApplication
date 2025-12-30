@@ -21,13 +21,20 @@ async function generateInvoicePDF(req, res) {
   let browser = null;
 
   try {
-    const { rentalIds } = req.body; // Array of rental IDs
+    // Support both GET (query params) and POST (body)
+    let rentalIds = req.body?.rentalIds || req.query.rentalIds;
+
+    // If rentalIds is a string, convert it to an array
+    if (typeof rentalIds === 'string') {
+      rentalIds = [rentalIds];
+    }
+
     const ownerId = req.user.userId;
 
     if (!rentalIds || !Array.isArray(rentalIds) || rentalIds.length === 0) {
       return res.status(400).json({
         success: false,
-        message: "rentalIds array is required",
+        message: "rentalIds array is required (either in body or query params)",
       });
     }
 
@@ -658,6 +665,55 @@ function generateInvoiceHTML(rentals) {
   `;
 }
 
+async function previewInvoice(req, res) {
+  try {
+    // Support both GET (query params) and POST (body)
+    let rentalIds = req.body?.rentalIds || req.query.rentalIds;
+
+    // If rentalIds is a string, convert it to an array
+    if (typeof rentalIds === 'string') {
+      rentalIds = [rentalIds];
+    }
+
+    const ownerId = req.user.userId;
+
+    if (!rentalIds || !Array.isArray(rentalIds) || rentalIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "rentalIds array is required (either in body or query params)",
+      });
+    }
+
+    // Fetch all rentals
+    const rentals = await Rental.find({
+      _id: { $in: rentalIds },
+      ownerId: ownerId,
+    });
+
+    if (!rentals || rentals.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No rentals found for the provided IDs",
+      });
+    }
+
+    // Generate HTML for the invoice
+    const invoiceHTML = generateInvoiceHTML(rentals);
+
+    // Send HTML response for preview
+    res.setHeader("Content-Type", "text/html");
+    return res.send(invoiceHTML);
+  } catch (error) {
+    console.error("Error generating invoice preview:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate invoice preview",
+      error: error.message,
+    });
+  }
+}
+
 module.exports = {
   generateInvoicePDF,
+  previewInvoice,
 };
