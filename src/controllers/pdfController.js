@@ -112,10 +112,10 @@ function generateInvoiceHTML(rentals) {
   // Calculate total for returned items
   let totalBalance = 0;
   closedRentals.forEach((item) => {
-    if (item.deliveryDate && item.returnDate) {
+    if (item.deliveredDate && item.returnDate) {
       const days =
         Math.floor(
-          (new Date(item.returnDate) - new Date(item.deliveryDate)) /
+          (new Date(item.returnDate) - new Date(item.deliveredDate)) /
             (1000 * 60 * 60 * 24)
         ) + 1;
       const amount =
@@ -463,7 +463,7 @@ function generateInvoiceHTML(rentals) {
           <div class="invoice-field">
             <span class="invoice-label">Delivery Date:</span>
             <span class="invoice-value">${dateFormatter(
-              firstRental.deliveryDate
+              firstRental.deliveredDate
             )}</span>
           </div>
           <div class="invoice-field">
@@ -549,10 +549,10 @@ function generateInvoiceHTML(rentals) {
           ${closedRentals
             .map((item, index) => {
               const days =
-                item.deliveryDate && item.returnDate
+                item.deliveredDate && item.returnDate
                   ? Math.floor(
                       (new Date(item.returnDate) -
-                        new Date(item.deliveryDate)) /
+                        new Date(item.deliveredDate)) /
                         (1000 * 60 * 60 * 24)
                     ) + 1
                   : "-";

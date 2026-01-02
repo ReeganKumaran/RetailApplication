@@ -8,15 +8,15 @@ const ownerSchema = new Schema(
     email: { type: String, required: true, unique: true },
     emailVerified: { type: Boolean, default: false },
     password: { type: String, required: true },
-    items: [
-      new Schema(
-        {
-          itemName: { type: String, required: true, trim: true },
-          quantity: { type: Number, required: true, default: 0, min: 0 },
-        },
-        { _id: true }
-      ),
-    ],
+    // items: [
+    //   new Schema(
+    //     {
+    //       itemName: { type: String, required: true, trim: true },
+    //       quantity: { type: Number, required: true, default: 0, min: 0 },
+    //     },
+    //     { _id: true }
+    //   ),
+    // ],
     resetPasswordToken: {
       type: String,
     },
@@ -27,36 +27,36 @@ const ownerSchema = new Schema(
   { timestamps: true }
 );
 // Remove duplicates before applying unique constraint
-ownerSchema.pre("save", function (next) {
-  if (this.items && this.items.length > 0) {
-    const seen = new Set();
-    this.items = this.items.filter((item) => {
-      if (seen.has(item.itemName)) {
-        return false; // Remove duplicate
-      }
-      seen.add(item.itemName);
-      return true;
-    });
-  }
-  next();
-});
-ownerSchema.pre("findOneAndUpdate", async function (next) {
-  const update = this.getUpdate();
-  const docId = this.getQuery()._id;
+// ownerSchema.pre("save", function (next) {
+//   if (this.items && this.items.length > 0) {
+//     const seen = new Set();
+//     this.items = this.items.filter((item) => {
+//       if (seen.has(item.itemName)) {
+//         return false; // Remove duplicate
+//       }
+//       seen.add(item.itemName);
+//       return true;
+//     });
+//   }
+//   next();
+// });
+// ownerSchema.pre("findOneAndUpdate", async function (next) {
+//   const update = this.getUpdate();
+//   const docId = this.getQuery()._id;
 
-  const existData = await this.model.findById(docId).lean();
-  const itemName = update.$set["items.$.itemName"];
+//   const existData = await this.model.findById(docId).lean();
+//   const itemName = update.$set["items.$.itemName"];
 
-  if (itemName && itemName !== "" && existData.items.length > 0) {
-    const isExist = existData.items.some((item) => item.itemName === itemName);
-    if (isExist)
-      throw new Error("Duplicate itemName is not allowed: " + itemName);
-    else this.setUpdate(update); // ✅ Apply modified update back to the query
-  }
-  next();
-});
+//   if (itemName && itemName !== "" && existData.items.length > 0) {
+//     const isExist = existData.items.some((item) => item.itemName === itemName);
+//     if (isExist)
+//       throw new Error("Duplicate itemName is not allowed: " + itemName);
+//     else this.setUpdate(update); // ✅ Apply modified update back to the query
+//   }
+//   next();
+// });
 
-ownerSchema.index({ "items.itemName": 1 }, { unique: true });
+// ownerSchema.index({ "items.itemName": 1 }, { unique: true });
 ownerSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();

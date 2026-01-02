@@ -12,7 +12,7 @@ const responseMiddleware = require("./middlewares/responseMiddleware");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const rentalRoutes = require("./routes/rentalRoutes");
-const itemRoutes = require("./routes/itemRouter");
+const itemRoutes = require("./routes/itemRoutes");
 
 app.use(cookieParser());
 app.use(express.json());

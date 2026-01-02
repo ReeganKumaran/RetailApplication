@@ -6,7 +6,7 @@ const PendingOwner = require("../models/pendingEmailVerfication");
 const sendOtpEmail = require("../services/email/sendOtp");
 const sendResetPasswordEmail = require("../services/email/sendResetPassword");
 const { isValidEmail, isValidPassword } = require("../helper/helper");
-
+const { logger } = require("../helper/logger");
 async function signup(req, res) {
   try {
     const { username, email, password, phoneNumber } = req.body;
@@ -51,6 +51,7 @@ async function signup(req, res) {
     );
 
     try {
+      logger.info(`Email: ${email}, OTP: ${otp} (for development only, not sent)`);
       await sendOtpEmail(email, otp);
       return res.success({}, "OTP sent to email", 201);
     } catch (emailError) {
@@ -143,6 +144,7 @@ async function verifySignup(req, res) {
     await PendingOwner.deleteOne({ _id: pending._id });
     return res.success({ token }, "Email verified successfully");
   } catch (error) {
+    logger.error("Error verifying signup:", error);
     return res.error(error.message || "Internal Server Error");
   }
 }

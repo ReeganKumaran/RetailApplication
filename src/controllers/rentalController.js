@@ -1,6 +1,7 @@
 const Rental = require("../models/rentalModel");
 const CustomerCollection = require("../models/customerCollectionModel");
 const Owner = require("../models/ownerModel");
+const { isDeliveryDateValid, isReturnDateValid } = require("../helper/validator");
 
 async function listRentals(req, res) {
   try {
@@ -119,7 +120,7 @@ async function addRental(req, res) {
       phoneNumber = null,
       itemDetail: itemDetailBody,
       item: legacyItemBody,
-      deliveryDate,
+      deliveredDate,
       returnDate = null,
       email = null,
       aadhar = null,
@@ -155,12 +156,24 @@ async function addRental(req, res) {
       itemDetail.price === null ||
       itemDetail.quantity === undefined ||
       itemDetail.quantity === null ||
-      !deliveryDate
+      !deliveredDate
     ) {
       return res.error(
-        "Payload must include customer, itemDetail{name,size,price,quantity}, and deliveryDate",
+        "Payload must include customer, itemDetail{name,size,price,quantity}, and deliveredDate",
         400
       );
+    }
+
+    // Validate delivery date
+    const deliveryValidation = isDeliveryDateValid(deliveredDate);
+    if (!deliveryValidation.isValid) {
+      return res.error(deliveryValidation.message, 400);
+    }
+
+    // Validate return date
+    const returnValidation = isReturnDateValid(returnDate, deliveredDate);
+    if (!returnValidation.isValid) {
+      return res.error(returnValidation.message, 400);
     }
 
     // Create/Update customer record
@@ -180,7 +193,7 @@ async function addRental(req, res) {
         aadharNumber: aadhar || "",
         address: deliveryAddress ? [deliveryAddress] : [],
         totalRented: 1,
-        totalDelivered: deliveryDate ? 1 : 0, // If deliveryDate exists, count as delivered
+        totalDelivered: deliveredDate ? 1 : 0, // If deliveredDate exists, count as delivered
         totalReturned: returnDate ? 1 : 0, // If returnDate exists, count as returned
         activeRentals: returnDate ? 0 : 1, // If returned, no active rentals, else 1
         lastRentalDate: new Date(),
@@ -190,8 +203,8 @@ async function addRental(req, res) {
       customer.totalRented += 1;
       customer.lastRentalDate = new Date();
 
-      // Update delivery count if deliveryDate is present
-      if (deliveryDate) {
+      // Update delivery count if deliveredDate is present
+      if (deliveredDate) {
         customer.totalDelivered += 1;
       }
 
@@ -235,7 +248,7 @@ async function addRental(req, res) {
       notes: note,
       // item subdocument
       itemDetail,
-      deliveryDate,
+      deliveredDate,
       returnDate,
       // embedded docs
       deliveryAddress,
@@ -314,6 +327,24 @@ async function editRental(req, res) {
       return res.error("Rental not found", 404);
     }
 
+    // Validate delivery date if it's being updated
+    if (update.deliveredDate) {
+      const deliveryValidation = isDeliveryDateValid(update.deliveredDate);
+      if (!deliveryValidation.isValid) {
+        return res.error(deliveryValidation.message, 400);
+      }
+    }
+
+    // Validate return date if it's being updated
+    // Use the updated delivery date if provided, otherwise use the original
+    const deliveryDateToCompare = update.deliveredDate || originalRental.deliveredDate;
+    if (update.returnDate) {
+      const returnValidation = isReturnDateValid(update.returnDate, deliveryDateToCompare);
+      if (!returnValidation.isValid) {
+        return res.error(returnValidation.message, 400);
+      }
+    }
+
     const updated = await Rental.findOneAndUpdate(
       { _id: id, ownerId: customerId },
       { $set: update },
@@ -375,7 +406,7 @@ async function editRental(req, res) {
           aadharNumber: update.clientAadhaar || "",
           address: [],
           totalRented: 1,
-          totalDelivered: originalRental.deliveryDate ? 1 : 0,
+          totalDelivered: originalRental.deliveredDate ? 1 : 0,
           totalReturned: originalRental.returnDate ? 1 : 0,
           activeRentals: originalRental.returnDate ? 0 : 1,
           lastRentalDate: new Date(),
@@ -391,8 +422,8 @@ async function editRental(req, res) {
     if (customer) {
       let needsSave = false;
 
-      // Track delivery status - if deliveryDate is newly set
-      if (update.deliveryDate && !originalRental.deliveryDate) {
+      // Track delivery status - if deliveredDate is newly set
+      if (update.deliveredDate && !originalRental.deliveredDate) {
         customer.totalDelivered += 1;
         needsSave = true;
       }
@@ -494,9 +525,9 @@ async function listAllCustomers(req, res) {
             const quantity = rental.itemDetail.quantity || 0;
             const advanceAmount = rental.itemDetail.advanceAmount || 0;
 
-            if (rental.deliveryDate) {
+            if (rental.deliveredDate) {
               const endDate = new Date(); // Use current date for pending rentals
-              const startDate = new Date(rental.deliveryDate);
+              const startDate = new Date(rental.deliveredDate);
               const diffMs = endDate - startDate;
               const days = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
 
@@ -596,7 +627,7 @@ async function deleteRental(req, res) {
         }
 
         // If rental was delivered, decrease delivered count
-        if (rental.deliveryDate) {
+        if (rental.deliveredDate) {
           customer.totalDelivered = Math.max(0, customer.totalDelivered - 1);
         }
 

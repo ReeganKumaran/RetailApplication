@@ -108,17 +108,35 @@ const requestLogger = (req, res, next) => {
   const originalSend = res.send;
   res.send = function (data) {
     const duration = Date.now() - startTime;
-    logger.http(
+
+    // Parse response data if it's a string
+    let responseBody;
+    try {
+      responseBody = typeof data === 'string' ? JSON.parse(data) : data;
+    } catch (e) {
+      responseBody = data;
+    }
+
+    const logData = {
+      method: req.method,
+      url: req.originalUrl || req.url,
+      statusCode: res.statusCode,
+      duration: `${duration}ms`,
+    };
+
+    // Add response body for errors or if it contains important info
+    if (res.statusCode >= 400 || (responseBody && !responseBody.success)) {
+      logData.response = responseBody;
+    }
+
+    const logLevel = res.statusCode >= 400 ? 'error' : 'http';
+    logger[logLevel](
       `${req.method} ${req.originalUrl || req.url} - ${
         res.statusCode
       } - ${duration}ms`,
-      {
-        method: req.method,
-        url: req.originalUrl || req.url,
-        statusCode: res.statusCode,
-        duration: `${duration}ms`,
-      }
+      logData
     );
+
     res.send = originalSend;
     return originalSend.call(this, data);
   };
