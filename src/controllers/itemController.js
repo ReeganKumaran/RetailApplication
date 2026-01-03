@@ -1,86 +1,262 @@
+const Item = require("../models/itemModel");
 const Owner = require("../models/ownerModel");
-const mongoose = require("mongoose");
 
-async function getListItem(req, res) {
+// Create a new item
+async function createItem(req, res) {
   try {
     const ownerId = req.user.userId;
-    if (!ownerId) res.error("UserId is missing");
-    const itemList = await Owner.findById(ownerId);
-    if (!itemList) res.error("UserId is missing");
-    res.success(itemList.items);
-  } catch (error) {
-    res.error(error.message || "Something went wrong");
-  }
-}
+    const {
+      name,
+      inventory,
+      pricing,
+      dimensions,
+    } = req.body;
 
-async function addItem(req, res) {
-  try {
-    const payload = req.body;
-    if (!payload.itemName) res.error("Items detail is missing");
-    const ownerId = req.user.userId;
-    const itemsList = await Owner.findById(ownerId);
-    if (!itemsList) {
-      return res.status(404).json({ error: "User not found" });
+    if (!ownerId) {
+      return res.error(
+        "Authentication error: userId is missing. Please login again.",
+        401
+      );
     }
-    if (!itemsList) res.error("User ID is mission");
 
-    itemsList.items.push({
-      itemName: payload.itemName,
-      quantity: payload.quantity,
+    // Verify that the authenticated user (business owner) exists
+    const businessOwner = await Owner.findById(ownerId);
+    if (!businessOwner) {
+      return res.error(
+        "Invalid user: Business owner account not found. Please login again.",
+        401
+      );
+    }
+
+    // Validate required fields
+    if (!name) {
+      return res.error("Item name is required", 400);
+    }
+
+    if (!inventory || inventory.totalQuantity === undefined || inventory.availableQuantity === undefined) {
+      return res.error(
+        "Inventory details (totalQuantity and availableQuantity) are required",
+        400
+      );
+    }
+
+    if (!pricing || pricing.unitPrice === undefined) {
+      return res.error("Pricing details (unitPrice) are required", 400);
+    }
+
+    // Create new item (itemId will auto-increment)
+    const item = new Item({
+      ownerId,
+      name,
+      inventory: {
+        totalQuantity: inventory.totalQuantity,
+        availableQuantity: inventory.availableQuantity,
+      },
+      pricing: {
+        unitPrice: pricing.unitPrice,
+        currency: pricing.currency || "INR",
+      },
+      dimensions: dimensions || {},
     });
-    // console.log(itemsList.items);
-    await itemsList.save();
-    res.success(itemsList);
+
+    await item.save();
+    return res.success({ item }, "Item created successfully", 201);
   } catch (error) {
-    res.error(error.message);
+    if (error.code === 11000) {
+      return res.error("Item with this itemId already exists", 409);
+    }
+    return res.error(error.message || "Something went wrong", 500);
   }
 }
 
+// Get all items for the authenticated owner
+async function getAllItems(req, res) {
+  try {
+    const ownerId = req.user.userId;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || null;
+    const search = req.query.search || null;
+    const skip = limit ? (page - 1) * limit : 0;
+
+    if (!ownerId) {
+      return res.error(
+        "Authentication error: userId is missing. Please login again.",
+        401
+      );
+    }
+
+    // Build query
+    const query = { ownerId };
+
+    // Add search functionality
+    if (search) {
+      const searchRegex = new RegExp(search, "i");
+      query.$or = [
+        { name: searchRegex },
+        { itemId: searchRegex },
+      ];
+    }
+
+    const items = await Item.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const totalCount = await Item.countDocuments(query);
+
+    const response = {
+      items,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: limit ? Math.ceil(totalCount / limit) : 1,
+      },
+    };
+
+    return res.success(response, "Items fetched successfully");
+  } catch (error) {
+    return res.error(error.message || "Something went wrong", 500);
+  }
+}
+
+// Get a single item by ID
+async function getItemById(req, res) {
+  try {
+    const ownerId = req.user.userId;
+    const itemId = req.params.id || req.query.id;
+
+    if (!ownerId) {
+      return res.error(
+        "Authentication error: userId is missing. Please login again.",
+        401
+      );
+    }
+
+    if (!itemId) {
+      return res.error("Item ID is required", 400);
+    }
+
+    const item = await Item.findOne({ _id: itemId, ownerId });
+
+    if (!item) {
+      return res.error("Item not found or does not belong to your account", 404);
+    }
+
+    return res.success({ item }, "Item fetched successfully");
+  } catch (error) {
+    return res.error(error.message || "Something went wrong", 500);
+  }
+}
+
+// Update an item
 async function updateItem(req, res) {
   try {
     const ownerId = req.user.userId;
-    const itemId =
-      (req.params && req.params.id) || (req.query && req.query.id) || null;
-    const { itemName, quantity } = req.body;
-    const missingFields = [];
-    if (!itemName) missingFields.push("itemName");
-    if (!quantity) missingFields.push("quantity");
-    if (!ownerId) missingFields.push("ownerId");
-    if (!itemId) missingFields.push("itemId");
-    if (missingFields.length > 0)
-      res.error(`Missing required field(s): ${missingFields.join(", ")}`);
-    const result = await Owner.findOneAndUpdate(
-      { _id: ownerId, "items._id": itemId },
-      {
-        $set: {
-          "items.$.itemName": itemName,
-          "items.$.quantity": quantity,
-        },
+    const itemId = req.params.id || req.query.id;
+    const updates = req.body;
+
+    if (!ownerId) {
+      return res.error(
+        "Authentication error: userId is missing. Please login again.",
+        401
+      );
+    }
+
+    if (!itemId) {
+      return res.error("Item ID is required", 400);
+    }
+
+    // Build update object
+    const update = {};
+    if (updates.name !== undefined) update.name = updates.name;
+    // itemId is auto-generated and should not be updated manually
+
+    // Handle nested inventory updates
+    if (updates.inventory) {
+      if (updates.inventory.totalQuantity !== undefined) {
+        update["inventory.totalQuantity"] = updates.inventory.totalQuantity;
       }
+      if (updates.inventory.availableQuantity !== undefined) {
+        update["inventory.availableQuantity"] = updates.inventory.availableQuantity;
+      }
+    }
+
+    // Handle nested pricing updates
+    if (updates.pricing) {
+      if (updates.pricing.unitPrice !== undefined) {
+        update["pricing.unitPrice"] = updates.pricing.unitPrice;
+      }
+      if (updates.pricing.currency !== undefined) {
+        update["pricing.currency"] = updates.pricing.currency;
+      }
+    }
+
+    // Handle nested dimensions updates
+    if (updates.dimensions) {
+      if (updates.dimensions.width !== undefined) {
+        update["dimensions.width"] = updates.dimensions.width;
+      }
+      if (updates.dimensions.height !== undefined) {
+        update["dimensions.height"] = updates.dimensions.height;
+      }
+      if (updates.dimensions.unit !== undefined) {
+        update["dimensions.unit"] = updates.dimensions.unit;
+      }
+    }
+
+    const item = await Item.findOneAndUpdate(
+      { _id: itemId, ownerId },
+      { $set: update },
+      { new: true, runValidators: true }
     );
-    res.success(result);
+
+    if (!item) {
+      return res.error("Item not found or does not belong to your account", 404);
+    }
+
+    return res.success({ item }, "Item updated successfully");
   } catch (error) {
-    res.error(error.message);
+    if (error.code === 11000) {
+      return res.error("Item with this itemId already exists", 409);
+    }
+    return res.error(error.message || "Something went wrong", 500);
   }
 }
 
+// Delete an item
 async function deleteItem(req, res) {
   try {
     const ownerId = req.user.userId;
-    const itemId =
-      (req.query && req.query.id) || (req.params && req.params.id) || null;
-    if (!itemId) res.error("The Item ID is require");
-    const updatedOwner = await Owner.findOneAndUpdate(
-      { _id: ownerId },
-      { $pull: { items: { _id: itemId } } },
-      { new: true }
-    );
-    res.success({
-      message: "Item deleted successfully",
-      items: updatedOwner.items,
-    });
+    const itemId = req.params.id || req.query.id;
+
+    if (!ownerId) {
+      return res.error(
+        "Authentication error: userId is missing. Please login again.",
+        401
+      );
+    }
+
+    if (!itemId) {
+      return res.error("Item ID is required", 400);
+    }
+
+    const item = await Item.findOneAndDelete({ _id: itemId, ownerId });
+
+    if (!item) {
+      return res.error("Item not found or does not belong to your account", 404);
+    }
+
+    return res.success({ id: itemId }, "Item deleted successfully");
   } catch (error) {
-    res.error(error.message || "Something went wrong");
+    return res.error(error.message || "Something went wrong", 500);
   }
 }
-module.exports = { addItem, deleteItem, getListItem, updateItem };
+
+module.exports = {
+  createItem,
+  getAllItems,
+  getItemById,
+  updateItem,
+  deleteItem,
+};

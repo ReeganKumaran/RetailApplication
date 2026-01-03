@@ -1,24 +1,31 @@
 const express = require("express");
 const {
-  addItem,
-  deleteItem,
-  getListItem,
+  createItem,
+  getAllItems,
+  getItemById,
   updateItem,
+  deleteItem,
 } = require("../controllers/itemController");
+const authMiddleware = require("../middlewares/authMiddleware");
 const router = express.Router();
 
-// get item list 
-router.get("/item", getListItem);
+// Apply authentication middleware to all item routes
+router.use(authMiddleware);
 
-// add item 
-router.post("/item", addItem);
+// Create a new item
+router.post("/items", createItem);
 
-// update item by id
-router.patch("/item", updateItem);
-router.patch("/item/:id", updateItem);
+// Get all items (with optional pagination and search)
+router.get("/items", getAllItems);
 
-// delete item by id
-router.delete("/item/:id", deleteItem);
-router.delete("/item", deleteItem);
+// Get a single item by ID
+router.get("/items/:id", getItemById);
+
+// Update an item by ID
+router.put("/items/:id", updateItem);
+router.patch("/items/:id", updateItem);
+
+// Delete an item by ID
+router.delete("/items/:id", deleteItem);
 
 module.exports = router;
