@@ -1,42 +1,40 @@
-const fs = require("fs");
-const path = require("path");
+const sgMail = require("@sendgrid/mail");
 require("dotenv").config();
-const transporter = require("./transporter");
+
+// Initialize SendGrid with API key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 async function sendOtpEmail(to, otp, actionUrl) {
-  const appName = "SRK Retail";
-  const supportEmail = "support@srkretail.com";
-  console.log("Using Gmail SMTP for email sending");
+  const appName = process.env.APP_NAME || "SRK";
+  const fromEmail = process.env.FROM_EMAIL || "reegank20@gmail.com";
+  const templateId = process.env.SENDGRID_OTP_TEMPLATE_ID || "d-0d1da8571eef4693965293b5c1c97524";
+
+  console.log("Using SendGrid for email sending");
+
   try {
-    const templatePath = path.join(__dirname, "templates", "otp.html");
+    const msg = {
+      to: to,
+      from: fromEmail,
+      templateId: templateId,
+      dynamicTemplateData: {
+        otp: String(otp),
+        app_name: appName,
+        action_url: actionUrl || "",
+        year: new Date().getFullYear(),
+      },
+    };
 
-    const htmlTemplate = fs.readFileSync(templatePath, "utf8");
-    const html = htmlTemplate
-      .replaceAll("{{appName}}", appName)
-      .replaceAll("{{otp}}", String(otp ?? ""))
-      .replaceAll("{{actionUrl}}", String(actionUrl ?? ""))
-      .replaceAll("{{supportEmail}}", supportEmail)
-      .replaceAll("{{year}}", String(new Date().getFullYear()));
-
-    const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USERNAME;
-
-    if (!fromEmail) {
-      throw new Error("FROM_EMAIL or SMTP_USERNAME environment variable is not configured");
-    }
-
-    await transporter.sendMail({
-      from: `"${appName}" <${fromEmail}>`,
-      to,
-      subject: `${appName} verification code: ${otp}`,
-      html,
-    });
+    await sgMail.send(msg);
+    console.log(`OTP email sent successfully to ${to}`);
   } catch (error) {
-    console.error("Failed to send OTP email:", error.message);
-    console.error("SMTP Config Check:", {
-      host: process.env.SMTP_HOST || "smtp.gmail.com",
-      port: process.env.SMTP_PORT || "587",
-      user: process.env.SMTP_USER || process.env.GMAIL_USER || "NOT_SET"
-    });
+    console.error("Failed to send OTP email via SendGrid:", error.message);
+
+    if (error.response) {
+      console.error("SendGrid Error Details:", {
+        statusCode: error.response.statusCode,
+        body: error.response.body,
+      });
+    }
 
     // Re-throw the error to let the caller handle it
     throw error;

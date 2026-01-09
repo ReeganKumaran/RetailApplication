@@ -137,7 +137,8 @@ async function getItemById(req, res) {
       return res.error("Item ID is required", 400);
     }
 
-    const item = await Item.findOne({ _id: itemId, ownerId });
+    // Search by itemId (numeric) instead of _id (ObjectId)
+    const item = await Item.findOne({ itemId: itemId, ownerId });
 
     if (!item) {
       return res.error("Item not found or does not belong to your account", 404);
@@ -205,8 +206,9 @@ async function updateItem(req, res) {
       }
     }
 
+    // Search by itemId (numeric) instead of _id (ObjectId)
     const item = await Item.findOneAndUpdate(
-      { _id: itemId, ownerId },
+      { itemId: itemId, ownerId },
       { $set: update },
       { new: true, runValidators: true }
     );
@@ -241,7 +243,8 @@ async function deleteItem(req, res) {
       return res.error("Item ID is required", 400);
     }
 
-    const item = await Item.findOneAndDelete({ _id: itemId, ownerId });
+    // Search by itemId (numeric) instead of _id (ObjectId)
+    const item = await Item.findOneAndDelete({ itemId: itemId, ownerId });
 
     if (!item) {
       return res.error("Item not found or does not belong to your account", 404);
