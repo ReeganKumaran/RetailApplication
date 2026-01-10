@@ -35,6 +35,11 @@ const RentalSchema = new Schema(
       type: String,
     },
     itemDetail: {
+      itemId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Item",
+        required: true,
+      },
       name: {
         type: String,
         required: true,

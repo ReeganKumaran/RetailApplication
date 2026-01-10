@@ -73,6 +73,7 @@ async function createItem(req, res) {
 async function getAllItems(req, res) {
   try {
     const ownerId = req.user.userId;
+    const itemId = req.query.id; // Check for id query parameter
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || null;
     const search = req.query.search || null;
@@ -85,7 +86,27 @@ async function getAllItems(req, res) {
       );
     }
 
-    // Build query
+    // If id query parameter is provided, return single item
+    if (itemId) {
+      const mongoose = require("mongoose");
+      let item;
+
+      if (mongoose.Types.ObjectId.isValid(itemId)) {
+        // If it's a valid ObjectId, search by _id
+        item = await Item.findOne({ _id: itemId, ownerId });
+      } else {
+        // Otherwise, search by numeric itemId
+        item = await Item.findOne({ itemId: itemId, ownerId });
+      }
+
+      if (!item) {
+        return res.error("Item not found or does not belong to your account", 404);
+      }
+
+      return res.success({ item }, "Item fetched successfully");
+    }
+
+    // Build query for listing all items
     const query = { ownerId };
 
     // Add search functionality
@@ -115,36 +136,6 @@ async function getAllItems(req, res) {
     };
 
     return res.success(response, "Items fetched successfully");
-  } catch (error) {
-    return res.error(error.message || "Something went wrong", 500);
-  }
-}
-
-// Get a single item by ID
-async function getItemById(req, res) {
-  try {
-    const ownerId = req.user.userId;
-    const itemId = req.params.id || req.query.id;
-
-    if (!ownerId) {
-      return res.error(
-        "Authentication error: userId is missing. Please login again.",
-        401
-      );
-    }
-
-    if (!itemId) {
-      return res.error("Item ID is required", 400);
-    }
-
-    // Search by itemId (numeric) instead of _id (ObjectId)
-    const item = await Item.findOne({ itemId: itemId, ownerId });
-
-    if (!item) {
-      return res.error("Item not found or does not belong to your account", 404);
-    }
-
-    return res.success({ item }, "Item fetched successfully");
   } catch (error) {
     return res.error(error.message || "Something went wrong", 500);
   }
@@ -259,7 +250,6 @@ async function deleteItem(req, res) {
 module.exports = {
   createItem,
   getAllItems,
-  getItemById,
   updateItem,
   deleteItem,
 };

@@ -4,10 +4,11 @@ const { Schema } = mongoose;
 
 const ItemSchema = new Schema(
   {
-    itemId: {
-      type: Number,
-      unique: true,
-    },
+    // itemId: {
+    //   type: Number,
+    //   required: true,
+    //   unique: true,
+    // },
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Owner",
