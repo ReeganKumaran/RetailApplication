@@ -19,7 +19,7 @@ async function sendOtpEmail(to, otp, actionUrl) {
     from: fromEmail,
     templateId,
     appName,
-    hasApiKey: !!process.env.SENDGRID_API_KEY,
+    hasApiKey: process.env.SENDGRID_API_KEY.slice(-6),
   });
 
   try {
