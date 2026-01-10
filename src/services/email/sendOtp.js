@@ -35,7 +35,22 @@ async function sendOtpEmail(to, otp, actionUrl) {
       },
     };
 
+    // Generate equivalent curl command for debugging
+    const curlCommand = `curl --location 'https://api.sendgrid.com/v3/mail/send' \\
+--header 'Authorization: Bearer ${apiKey ? apiKey.slice(0, 10) + '...' + apiKey.slice(-6) : 'NOT_SET'}' \\
+--header 'Content-Type: application/json' \\
+--data-raw '{
+  "personalizations": [{
+    "to": [{"email": "${to}"}],
+    "dynamic_template_data": ${JSON.stringify(msg.dynamicTemplateData, null, 2)}
+  }],
+  "from": {"email": "${fromEmail}"},
+  "template_id": "${templateId}"
+}'`;
+
+    logger.info("SendGrid API Request (curl equivalent):", { curl: curlCommand });
     logger.info("Attempting to send email via SendGrid...");
+
     const response = await sgMail.send(msg);
     logger.info(`OTP email sent successfully to ${to}`, { statusCode: response[0].statusCode });
   } catch (error) {
