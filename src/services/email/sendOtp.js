@@ -45,20 +45,87 @@ async function sendOtpEmail(to, otp, actionUrl) {
       <html>
       <head>
         <style>
-          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-          .header { background-color: #4CAF50; color: white; padding: 20px; text-align: center; }
-          .content { background-color: #f9f9f9; padding: 30px; }
-          .otp-box { background-color: #fff; border: 2px solid #4CAF50; padding: 20px; text-align: center; margin: 20px 0; }
-          .otp-code { font-size: 32px; font-weight: bold; color: #4CAF50; letter-spacing: 5px; }
-          .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background-color: #121212;
+            margin: 0;
+            padding: 0;
+          }
+          .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #121212;
+          }
+          .header {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+          }
+          .header h1 {
+            margin: 0;
+            font-size: 28px;
+            color: #4CAF50;
+          }
+          .content {
+            background-color: #1e1e1e;
+            padding: 40px 30px;
+            border-radius: 0 0 10px 10px;
+          }
+          .content h2 {
+            color: #ffffff;
+            margin-top: 0;
+          }
+          .content p {
+            color: #b0b0b0;
+            font-size: 16px;
+          }
+          .otp-box {
+            background-color: #2a2a2a;
+            border: 2px solid #4CAF50;
+            padding: 25px;
+            text-align: center;
+            margin: 25px 0;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.2);
+          }
+          .otp-code {
+            font-size: 36px;
+            font-weight: bold;
+            color: #4CAF50;
+            letter-spacing: 8px;
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+          }
+          .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+            background-color: #121212;
+          }
+          a {
+            color: #4CAF50;
+            text-decoration: none;
+            font-weight: bold;
+          }
+          a:hover {
+            color: #66BB6A;
+            text-decoration: underline;
+          }
+          strong {
+            color: #ffffff;
+          }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
             <h1>${appName}</h1>
-            <p>Email Verification</p>
+            <p style="color: #b0b0b0; margin: 10px 0 0 0;">Email Verification</p>
           </div>
           <div class="content">
             <h2>Hello!</h2>
@@ -68,7 +135,7 @@ async function sendOtpEmail(to, otp, actionUrl) {
             </div>
             <p><strong>This OTP is valid for 10 minutes.</strong></p>
             <p>If you didn't request this verification, please ignore this email.</p>
-            ${actionUrl ? `<p><a href="${actionUrl}" style="color: #4CAF50;">Click here to verify</a></p>` : ""}
+            ${actionUrl ? `<p><a href="${actionUrl}">Click here to verify</a></p>` : ""}
           </div>
           <div class="footer">
             <p>&copy; ${new Date().getFullYear()} ${appName}. All rights reserved.</p>

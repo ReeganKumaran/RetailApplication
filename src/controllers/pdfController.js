@@ -24,9 +24,9 @@ async function generateInvoicePDF(req, res) {
     // Support both GET (query params) and POST (body)
     let rentalIds = req.body?.rentalIds || req.query.rentalIds;
 
-    // If rentalIds is a string, convert it to an array
+    // If rentalIds is a string, split by comma and convert to array
     if (typeof rentalIds === 'string') {
-      rentalIds = [rentalIds];
+      rentalIds = rentalIds.split(',').map(id => id.trim()).filter(id => id);
     }
 
     const ownerId = req.user.userId;
@@ -670,9 +670,9 @@ async function previewInvoice(req, res) {
     // Support both GET (query params) and POST (body)
     let rentalIds = req.body?.rentalIds || req.query.rentalIds;
 
-    // If rentalIds is a string, convert it to an array
+    // If rentalIds is a string, split by comma and convert to array
     if (typeof rentalIds === 'string') {
-      rentalIds = [rentalIds];
+      rentalIds = rentalIds.split(',').map(id => id.trim()).filter(id => id);
     }
 
     const ownerId = req.user.userId;
