@@ -6,7 +6,7 @@ const PendingOwner = require("../models/pendingEmailVerfication");
 const sendOtpEmail = require("../services/email/sendOtp");
 const sendResetPasswordEmail = require("../services/email/sendResetPassword");
 const { isValidEmail, isValidPassword } = require("../helper/helper");
-
+const { logger } = require("../helper/logger");
 async function signup(req, res) {
   try {
     const { username, email, password, phoneNumber } = req.body;
@@ -51,6 +51,7 @@ async function signup(req, res) {
     );
 
     try {
+      logger.info(`Email: ${email}, OTP: ${otp} (for development only, not sent)`);
       await sendOtpEmail(email, otp);
       return res.success({}, "OTP sent to email", 201);
     } catch (emailError) {
@@ -143,6 +144,7 @@ async function verifySignup(req, res) {
     await PendingOwner.deleteOne({ _id: pending._id });
     return res.success({ token }, "Email verified successfully");
   } catch (error) {
+    logger.error("Error verifying signup:", error);
     return res.error(error.message || "Internal Server Error");
   }
 }
@@ -191,27 +193,25 @@ async function forgotPassword(req, res) {
 
     const user = await Owner.findOne({ email });
     if (!user) {
-      return res.error("User not found", 404);
+      // To prevent user enumeration, we'll send a generic success response even if the user is not found.
+      // The email service should handle non-existent emails gracefully.
+      logger.warn(`Password reset requested for non-existent user: ${email}`);
+      return res.success({}, "If your email is registered, you will receive a password reset OTP.");
     }
 
-    const resetToken = crypto.randomBytes(32).toString("hex");
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const hashedOtp = await bcrypt.hash(otp, 10);
+
+    user.resetPasswordToken = hashedOtp;
+    user.resetPasswordExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
     await user.save();
 
-    const baseUrl =
-      process.env.PASSWORD_RESET_URL ||
-      "http://yourfrontend.com/reset-password";
-    const resetUrl = `${baseUrl}/${resetToken}`;
+    await sendResetPasswordEmail(user.email, otp);
 
-    await sendResetPasswordEmail(user.email, resetToken, resetUrl, {
-      expiresInMinutes: 15,
-    });
-
-    return res.success({}, "Password reset instructions sent to email");
+    return res.success({}, "Password reset OTP sent to email");
   } catch (error) {
-    console.error("Error processing forgot password:", error);
-    return res.error(error.message || "Internal Server Error");
+    logger.error("Error processing forgot password:", error);
+    return res.error("An internal error occurred. Please try again later.");
   }
 }
 // function findIsExpire({date , time}){
@@ -219,42 +219,45 @@ async function forgotPassword(req, res) {
 // }
 async function resetPassword(req, res) {
   try {
-    const { email, newPassword, token } = req.body;
+    const { email, otp, newPassword } = req.body;
 
-    // 1. Check required fields
-    if (!email || !newPassword || !token) {
-      return res.status(400).json({ message: "Email, token, and new password are required" });
+    if (!email || !otp || !newPassword) {
+      return res.error("Email, OTP, and new password are required", 400);
     }
 
-    // 2. Find user
+    if (!isValidPassword(newPassword)) {
+      return res.error(
+        "Password must be at least 8 characters long and include uppercase, lowercase, digit, and special character.",
+        400
+      );
+    }
+
     const user = await Owner.findOne({ email });
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.error("Invalid OTP or email", 400);
     }
 
-    // 3. Validate token and expiry
-    if (!user.resetPasswordToken || user.resetPasswordToken !== token) {
-      return res.status(400).json({ message: "Invalid token" });
+    if (!user.resetPasswordToken || user.resetPasswordExpire < Date.now()) {
+      return res.error("OTP has expired or is invalid. Please request a new one.", 400);
     }
 
-    if (user.resetPasswordExpire < Date.now()) {
-      return res.status(400).json({ message: "Token has expired" });
+    const isMatch = await bcrypt.compare(otp, user.resetPasswordToken);
+    if (!isMatch) {
+      return res.error("Invalid OTP or email", 400);
     }
 
-    // 4. Hash the new password
     const salt = await bcrypt.genSalt(10);
     user.password = await bcrypt.hash(newPassword, salt);
 
-    // 5. Clear reset fields
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
     await user.save();
 
-    return res.json({ message: "Password has been reset successfully" });
+    return res.success({}, "Password has been reset successfully");
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Server error" });
+    logger.error("Error resetting password:", error);
+    return res.error("An internal error occurred. Please try again later.");
   }
 }
 module.exports = { signup, verifySignup, login, forgotPassword, resetPassword };

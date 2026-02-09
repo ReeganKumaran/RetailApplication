@@ -1,6 +1,10 @@
+const mongoose = require("mongoose");
 const Rental = require("../models/rentalModel");
 const CustomerCollection = require("../models/customerCollectionModel");
 const Owner = require("../models/ownerModel");
+const Item = require("../models/itemModel");
+const { isDeliveryDateValid, isReturnDateValid } = require("../helper/validator");
+const { logger } = require("../helper/logger");
 
 async function listRentals(req, res) {
   try {
@@ -119,7 +123,7 @@ async function addRental(req, res) {
       phoneNumber = null,
       itemDetail: itemDetailBody,
       item: legacyItemBody,
-      deliveryDate,
+      deliveredDate,
       returnDate = null,
       email = null,
       aadhar = null,
@@ -155,12 +159,51 @@ async function addRental(req, res) {
       itemDetail.price === null ||
       itemDetail.quantity === undefined ||
       itemDetail.quantity === null ||
-      !deliveryDate
+      itemDetail.itemId === undefined ||
+      itemDetail.itemId === null ||
+      !deliveredDate
+
     ) {
       return res.error(
-        "Payload must include customer, itemDetail{name,size,price,quantity}, and deliveryDate",
+        "Payload must include customer, itemDetail{name,size,price,quantity}, and deliveredDate",
         400
       );
+    }
+    const itemQuantity = parseInt(itemDetail.quantity);
+    console.log(itemDetail, customerId);
+
+    // Find item by itemId (numeric) or _id (ObjectId) for backward compatibility
+    let itemDetails;
+    if (mongoose.Types.ObjectId.isValid(itemDetail.itemId)) {
+      // If it's a valid ObjectId, search by _id
+      itemDetails = await Item.findOne({ _id: itemDetail.itemId, ownerId: customerId });
+    } else {
+      // Otherwise, search by numeric itemId
+      itemDetails = await Item.findOne({ itemId: itemDetail.itemId, ownerId: customerId });
+    }
+
+    logger.info(itemDetails ? `Item found: ${itemDetails.name}` : "No item found");
+
+    if (!itemDetails) {
+      return res.error("Item not found with the provided itemId", 404);
+    }
+    if (itemQuantity > itemDetails?.inventory?.availableQuantity) {
+      return res.error(
+        `Insufficient stock for item ${itemDetails.name}. Available stock: ${itemDetails.inventory.availableQuantity}`,
+        400
+      );
+    }
+    itemDetails.inventory.availableQuantity -= itemQuantity;
+    // Validate delivery date
+    const deliveryValidation = isDeliveryDateValid(deliveredDate);
+    if (!deliveryValidation.isValid) {
+      return res.error(deliveryValidation.message, 400);
+    }
+
+    // Validate return date
+    const returnValidation = isReturnDateValid(returnDate, deliveredDate);
+    if (!returnValidation.isValid) {
+      return res.error(returnValidation.message, 400);
     }
 
     // Create/Update customer record
@@ -180,7 +223,7 @@ async function addRental(req, res) {
         aadharNumber: aadhar || "",
         address: deliveryAddress ? [deliveryAddress] : [],
         totalRented: 1,
-        totalDelivered: deliveryDate ? 1 : 0, // If deliveryDate exists, count as delivered
+        totalDelivered: deliveredDate ? 1 : 0, // If deliveredDate exists, count as delivered
         totalReturned: returnDate ? 1 : 0, // If returnDate exists, count as returned
         activeRentals: returnDate ? 0 : 1, // If returned, no active rentals, else 1
         lastRentalDate: new Date(),
@@ -190,8 +233,8 @@ async function addRental(req, res) {
       customer.totalRented += 1;
       customer.lastRentalDate = new Date();
 
-      // Update delivery count if deliveryDate is present
-      if (deliveryDate) {
+      // Update delivery count if deliveredDate is present
+      if (deliveredDate) {
         customer.totalDelivered += 1;
       }
 
@@ -235,7 +278,7 @@ async function addRental(req, res) {
       notes: note,
       // item subdocument
       itemDetail,
-      deliveryDate,
+      deliveredDate,
       returnDate,
       // embedded docs
       deliveryAddress,
@@ -243,6 +286,7 @@ async function addRental(req, res) {
       customerDetail: customerDetail || undefined,
     });
     await rental.save();
+    await itemDetails.save();
     return res.success({ id: rental._id }, "Rental added successfully", 201);
   } catch (error) {
     return res.error(error.message || "Something Went Wrong");
@@ -255,6 +299,8 @@ async function editRental(req, res) {
     const update = {};
     const id = (req.params && req.params.id) || (req.query && req.query.customerId);
     const customerId = req.user.userId;
+    const needToUpdateItemInventory = false;
+
 
     if (!customerId) {
       return res.error(
@@ -312,6 +358,24 @@ async function editRental(req, res) {
     });
     if (!originalRental) {
       return res.error("Rental not found", 404);
+    }
+
+    // Validate delivery date if it's being updated
+    if (update.deliveredDate) {
+      const deliveryValidation = isDeliveryDateValid(update.deliveredDate);
+      if (!deliveryValidation.isValid) {
+        return res.error(deliveryValidation.message, 400);
+      }
+    }
+
+    // Validate return date if it's being updated
+    // Use the updated delivery date if provided, otherwise use the original
+    const deliveryDateToCompare = update.deliveredDate || originalRental.deliveredDate;
+    if (update.returnDate) {
+      const returnValidation = isReturnDateValid(update.returnDate, deliveryDateToCompare);
+      if (!returnValidation.isValid) {
+        return res.error(returnValidation.message, 400);
+      }
     }
 
     const updated = await Rental.findOneAndUpdate(
@@ -375,13 +439,20 @@ async function editRental(req, res) {
           aadharNumber: update.clientAadhaar || "",
           address: [],
           totalRented: 1,
-          totalDelivered: originalRental.deliveryDate ? 1 : 0,
+          totalDelivered: originalRental.deliveredDate ? 1 : 0,
           totalReturned: originalRental.returnDate ? 1 : 0,
           activeRentals: originalRental.returnDate ? 0 : 1,
           lastRentalDate: new Date(),
         });
       }
-
+      let itemDetails;
+      if (mongoose.Types.ObjectId.isValid(originalRental.itemDetail.itemId)) {
+        // If it's a valid ObjectId, search by _id
+        itemDetails = await Item.findOne({ _id: originalRental.itemDetail.itemId, ownerId: customerId });
+      } else {
+        // Otherwise, search by numeric itemId
+        itemDetails = await Item.findOne({ itemId: originalRental.itemDetail.itemId, ownerId: customerId });
+      }
       // Set the customerId in the update
       if (customer && customer._id) {
         update.customerId = customer._id;
@@ -391,8 +462,8 @@ async function editRental(req, res) {
     if (customer) {
       let needsSave = false;
 
-      // Track delivery status - if deliveryDate is newly set
-      if (update.deliveryDate && !originalRental.deliveryDate) {
+      // Track delivery status - if deliveredDate is newly set
+      if (update.deliveredDate && !originalRental.deliveredDate) {
         customer.totalDelivered += 1;
         needsSave = true;
       }
@@ -449,11 +520,75 @@ async function editRental(req, res) {
       }
     }
 
+    // Handle item inventory when rental is returned
+    if (update.returnDate && !originalRental.returnDate && originalRental.itemDetail && originalRental.itemDetail.itemId) {
+      // Items are being returned - add quantity back to inventory
+      const rentalQuantity = parseInt(originalRental.itemDetail.quantity);
+
+      // Find the item
+      let itemDetails;
+      if (mongoose.Types.ObjectId.isValid(originalRental.itemDetail.itemId)) {
+        itemDetails = await Item.findOne({ _id: originalRental.itemDetail.itemId, ownerId: customerId });
+      } else {
+        itemDetails = await Item.findOne({ itemId: originalRental.itemDetail.itemId, ownerId: customerId });
+      }
+
+      if (itemDetails) {
+        // Return items to inventory
+        itemDetails.inventory.availableQuantity += rentalQuantity;
+        await itemDetails.save();
+        logger.info(`Items returned to inventory: ${itemDetails.name}, Quantity: ${rentalQuantity}, New Available: ${itemDetails.inventory.availableQuantity}`);
+      }
+    }
+
+    // Handle item inventory updates when rental quantity changes (only for active rentals)
+    if (update["itemDetail.quantity"] && originalRental.itemDetail && originalRental.itemDetail.itemId) {
+      // Don't allow quantity changes if rental is already returned or being returned in this update
+      if (originalRental.returnDate || update.returnDate) {
+        return res.error("Cannot change quantity for returned rentals", 400);
+      }
+
+      const newQuantity = parseInt(update["itemDetail.quantity"]);
+      const oldQuantity = parseInt(originalRental.itemDetail.quantity);
+
+      if (newQuantity !== oldQuantity) {
+        // Find the item
+        let itemDetails;
+        if (mongoose.Types.ObjectId.isValid(originalRental.itemDetail.itemId)) {
+          // If it's a valid ObjectId, search by _id
+          itemDetails = await Item.findOne({ _id: originalRental.itemDetail.itemId, ownerId: customerId });
+        } else {
+          // Otherwise, search by numeric itemId
+          itemDetails = await Item.findOne({ itemId: originalRental.itemDetail.itemId, ownerId: customerId });
+        }
+
+        if (itemDetails) {
+          // Calculate the difference
+          const quantityDifference = newQuantity - oldQuantity;
+
+          // If rental quantity increased, decrease inventory (more items rented out)
+          // If rental quantity decreased, increase inventory (items returned to stock)
+          itemDetails.inventory.availableQuantity -= quantityDifference;
+
+          // Validate inventory doesn't go negative
+          if (itemDetails.inventory.availableQuantity < 0) {
+            return res.error(
+              `Insufficient stock. Only ${itemDetails.inventory.availableQuantity + quantityDifference} items available.`,
+              400
+            );
+          }
+
+          await itemDetails.save();
+          logger.info(`Item inventory updated: ${itemDetails.name}, Available: ${itemDetails.inventory.availableQuantity}`);
+        }
+      }
+    }
+
     return res.success(updated, "Rental updated successfully");
   } catch (error) {
     res.error(
       "Dei, enna API ezhuthirukka! Poraamai thappa thappa irukku." +
-        error.message
+      error.message
     );
   }
 }
@@ -494,9 +629,9 @@ async function listAllCustomers(req, res) {
             const quantity = rental.itemDetail.quantity || 0;
             const advanceAmount = rental.itemDetail.advanceAmount || 0;
 
-            if (rental.deliveryDate) {
+            if (rental.deliveredDate) {
               const endDate = new Date(); // Use current date for pending rentals
-              const startDate = new Date(rental.deliveryDate);
+              const startDate = new Date(rental.deliveredDate);
               const diffMs = endDate - startDate;
               const days = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
 
@@ -596,7 +731,7 @@ async function deleteRental(req, res) {
         }
 
         // If rental was delivered, decrease delivered count
-        if (rental.deliveryDate) {
+        if (rental.deliveredDate) {
           customer.totalDelivered = Math.max(0, customer.totalDelivered - 1);
         }
 

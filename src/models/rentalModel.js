@@ -35,6 +35,11 @@ const RentalSchema = new Schema(
       type: String,
     },
     itemDetail: {
+      itemId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Item",
+        required: true,
+      },
       name: {
         type: String,
         required: true,
@@ -62,7 +67,7 @@ const RentalSchema = new Schema(
       enum: ["Pending", "Returned"],
       default: "Pending",
     },
-    deliveryDate: {
+    deliveredDate: {
       type: Date,
       required: true,
     },
@@ -108,9 +113,9 @@ const RentalSchema = new Schema(
 // });
 
 RentalSchema.virtual("totalDays").get(function () {
-  if (!this.deliveryDate) return undefined;
+  if (!this.deliveredDate) return undefined;
   const end = this.returnDate ? new Date(this.returnDate) : new Date();
-  const start = new Date(this.deliveryDate);
+  const start = new Date(this.deliveredDate);
   const diffMs = end - start;
   const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
   return Math.max(1, days);
@@ -125,9 +130,9 @@ RentalSchema.virtual("itemDetail.totalPrice").get(function () {
     this.itemDetail && typeof this.itemDetail.quantity === "number"
       ? this.itemDetail.quantity
       : 0;
-  if (!this.deliveryDate) return 0;
+  if (!this.deliveredDate) return 0;
   const end = this.returnDate ? new Date(this.returnDate) : new Date();
-  const start = new Date(this.deliveryDate);
+  const start = new Date(this.deliveredDate);
   const diffMs = end - start;
   const days = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
   return price * qty * (Number.isFinite(days) ? days : 0);
@@ -143,9 +148,9 @@ RentalSchema.virtual("totalRent").get(function () {
     this.itemDetail && typeof this.itemDetail.quantity === "number"
       ? this.itemDetail.quantity
       : 0;
-  if (!this.deliveryDate) return 0;
+  if (!this.deliveredDate) return 0;
   const end = this.returnDate ? new Date(this.returnDate) : new Date();
-  const start = new Date(this.deliveryDate);
+  const start = new Date(this.deliveredDate);
   const diffMs = end - start;
   const days = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
   return price * qty * (Number.isFinite(days) ? days : 0);
@@ -162,8 +167,8 @@ RentalSchema.pre("save", function (next) {
     }
 
     // Validate dates
-    if (this.deliveryDate && this.returnDate) {
-      const start = new Date(this.deliveryDate);
+    if (this.deliveredDate && this.returnDate) {
+      const start = new Date(this.deliveredDate);
       const end = new Date(this.returnDate);
       if (end < start) {
         return next(
@@ -191,7 +196,7 @@ RentalSchema.pre("findOneAndUpdate", async function (next) {
 
     // Validate dates
     const doc = await this.model.findOne(this.getQuery());
-    const d = doc && doc.deliveryDate ? new Date(doc.deliveryDate) : null;
+    const d = doc && doc.deliveredDate ? new Date(doc.deliveredDate) : null;
     if (set.returnDate && d) {
       const r = new Date(set.returnDate);
       if (r < d) {

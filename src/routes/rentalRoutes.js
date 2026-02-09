@@ -17,6 +17,7 @@ rentalRouter.use(authMiddleware);
 // Rental routes
 rentalRouter.get("/rentals", listRentals);
 rentalRouter.get("/rentals/:customerId", listRentals);  // Get specific rental by ID
+
 rentalRouter.post("/rentals", addRental);
 // Support updating by id path param and legacy query param (?id=...)
 rentalRouter.patch("/rentals/:customerId", editRental);

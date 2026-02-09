@@ -1,43 +1,45 @@
-const fs = require("fs");
-const path = require("path");
+const sgMail = require("@sendgrid/mail");
 require("dotenv").config();
-const transporter = require("./transporter");
 
-async function sendResetPasswordEmail(to, token, resetUrl, options = {}) {
+// Initialize SendGrid with API key
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+async function sendResetPasswordEmail(to, otp) {
   if (!to) throw new Error("Recipient email is required");
-  if (!token) throw new Error("Reset token is required");
-  if (!resetUrl) throw new Error("Reset URL is required");
+  if (!otp) throw new Error("OTP is required");
 
-  const appName = options.appName || "SRK Retail";
-  const supportEmail = options.supportEmail || "support@srkretail.com";
-  const expiresInMinutes = options.expiresInMinutes || 15;
-  console.log("Using Gmail SMTP for email sending");
+  const appName = process.env.APP_NAME || "SRK";
+  const fromEmail = process.env.FROM_EMAIL || "reegank20@gmail.com";
+  
+  console.log("Using SendGrid for email sending");
+
   try {
-    const templatePath = path.join(__dirname, "templates", "reset-password.html");
-    const htmlTemplate = fs.readFileSync(templatePath, "utf8");
+    const msg = {
+      to: to,
+      from: fromEmail,
+      subject: `${appName} Password Reset OTP`,
+      text: `Your OTP for password reset is: ${otp}\n\nThis OTP expires in 15 minutes.\n\nIf you didn't request this, please ignore this email.`,
+      html: `
+        <h2>${appName} Password Reset</h2>
+        <p>Your One-Time Password (OTP) for resetting your password is:</p>
+        <h1 style="font-size: 24px; font-weight: bold;">${otp}</h1>
+        <p>This OTP expires in 15 minutes.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+      `,
+    };
 
-    const html = htmlTemplate
-      .replaceAll("{{appName}}", appName)
-      .replaceAll("{{resetUrl}}", String(resetUrl))
-      .replaceAll("{{token}}", String(token))
-      .replaceAll("{{supportEmail}}", supportEmail)
-      .replaceAll("{{expiresInMinutes}}", String(expiresInMinutes))
-      .replaceAll("{{year}}", String(new Date().getFullYear()));
+    await sgMail.send(msg);
+    console.log(`Reset password OTP email sent successfully to ${to}`);
+  } catch (error) {
+    console.error("Failed to send reset password OTP email via SendGrid:", error.message);
 
-    const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USERNAME;
-
-    if (!fromEmail) {
-      throw new Error("FROM_EMAIL or SMTP_USERNAME environment variable is not configured");
+    if (error.response) {
+      console.error("SendGrid Error Details:", {
+        statusCode: error.response.statusCode,
+        body: error.response.body,
+      });
     }
 
-    await transporter.sendMail({
-      from: `"${appName}" <${fromEmail}>`,
-      to,
-      subject: `${appName} password reset instructions`,
-      html,
-    });
-  } catch (error) {
-    console.error("Failed to send reset password email:", error.message);
     throw error;
   }
 }
