@@ -71,3 +71,6 @@ sessions/
 # Upload directories (if any)
 uploads/
 public/uploads/
+
+# Cache
+.cache/
