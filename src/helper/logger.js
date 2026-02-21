@@ -1,5 +1,12 @@
 const winston = require("winston");
 const path = require("path");
+const fs = require("fs");
+
+// Ensure logs directory exists
+const logDir = "logs";
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir);
+}
 
 const levels = {
   error: 0,
@@ -9,10 +16,9 @@ const levels = {
   debug: 4,
 };
 
-const level = () => {
+const getLevel = () => {
   const env = process.env.NODE_ENV || "development";
-  const isDevelopment = env === "development";
-  return isDevelopment ? "debug" : "info";
+  return env === "development" ? "debug" : "info";
 };
 
 const colors = {
@@ -20,7 +26,7 @@ const colors = {
   warn: "yellow",
   info: "green",
   http: "magenta",
-  debug: "white",
+  debug: "cyan",
 };
 
 winston.addColors(colors);
@@ -28,118 +34,89 @@ winston.addColors(colors);
 const format = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
   winston.format.errors({ stack: true }),
-  winston.format.json(),
+  winston.format.json()
+);
+
+// Custom format for console output
+const consoleFormat = winston.format.combine(
+  winston.format.colorize({ all: true }),
   winston.format.printf((info) => {
     const { timestamp, level, message, stack, ...args } = info;
-    const ts = timestamp.slice(0, 19).replace("T", " ");
-    let logMessage = `${ts} [${level}]: ${message}`;
-    if (Object.keys(args).length) {
-      logMessage += ` ${JSON.stringify(args, null, 2)}`;
+    const ts = (timestamp || "").toString().slice(0, 19);
+
+    let log = `${ts} [${level}]: ${message}`;
+
+    // Add additional metadata if present (excluding internal winston props)
+    const meta = Object.keys(args).filter(key => !['timestamp', 'level', 'message', 'service'].includes(key));
+    if (meta.length > 0) {
+      log += `\nMetadata: ${JSON.stringify(args, null, 2)}`;
     }
+
     if (stack) {
-      logMessage += `\nStack Trace:\n${stack}`;
+      log += `\nStack: ${stack}`;
     }
-    return logMessage;
+
+    return log;
   })
 );
 
 const transports = [
   new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize({ all: true }),
-      winston.format.printf((info) => {
-        const { timestamp, level, message, stack, ...args } = info;
-        const ts = timestamp.slice(0, 19).replace("T", " ");
-        let logMessage = `${ts} [${level}]: ${message}`;
-        if (Object.keys(args).length) {
-          logMessage += ` ${JSON.stringify(args, null, 2)}`;
-        }
-        if (stack) {
-          logMessage += `\nStack Trace:\n${stack}`;
-        }
-        return logMessage;
-      })
-    ),
+    format: consoleFormat,
+  }),
+  new winston.transports.File({
+    filename: path.join(logDir, "error.log"),
+    level: "error",
+    maxsize: 10 * 1024 * 1024, // 10MB
+    maxFiles: 5,
+  }),
+  new winston.transports.File({
+    filename: path.join(logDir, "combined.log"),
+    maxsize: 10 * 1024 * 1024, // 10MB
+    maxFiles: 5,
   }),
 ];
 
-if (process.env.NODE_ENV !== "test") {
-  transports.push(
-    new winston.transports.File({
-      filename: path.join("logs", "error.log"),
-      level: "error",
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    }),
-    new winston.transports.File({
-      filename: path.join("logs", "combined.log"),
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    })
-  );
-}
-
 const logger = winston.createLogger({
-  level: level(),
+  level: getLevel(),
   levels,
   format,
   transports,
   exitOnError: false,
 });
 
-// Middleware to log all incoming API calls
+/**
+ * Middleware for logging HTTP requests
+ */
 const requestLogger = (req, res, next) => {
-  const startTime = Date.now();
+  const start = Date.now();
 
-  // Log incoming request
-  logger.http(
-    `${req.method} ${req.originalUrl || req.url}`
-      ,{
-      method: req.method,
-      url: req.originalUrl || req.url,
-      ip: req.ip || req.connection.remoteAddress,
-      userAgent: req.get('user-agent'),
-      query: req.query,
-      body: req.method !== 'GET' ? req.body : undefined,
-    }
-  );
+  // Log request when it comes in
+  logger.http(`Incoming Request: ${req.method} ${req.originalUrl}`, {
+    ip: req.ip,
+    userAgent: req.get("user-agent"),
+    query: req.query,
+    body: (req.method !== "GET" && req.body) ? req.body : undefined,
+  });
 
-  // Capture response
-  const originalSend = res.send;
-  res.send = function (data) {
-    const duration = Date.now() - startTime;
-
-    // Parse response data if it's a string
-    let responseBody;
-    try {
-      responseBody = typeof data === 'string' ? JSON.parse(data) : data;
-    } catch (e) {
-      responseBody = data;
-    }
+  // Track the finish of the request
+  res.on("finish", () => {
+    const duration = Date.now() - start;
+    const { statusCode } = res;
 
     const logData = {
       method: req.method,
-      url: req.originalUrl || req.url,
-      statusCode: res.statusCode,
+      url: req.originalUrl,
+      status: statusCode,
       duration: `${duration}ms`,
     };
 
-    // Add response body for errors or if it contains important info
-    if (res.statusCode >= 400 || (responseBody && !responseBody.success)) {
-      logData.response = responseBody;
+    if (statusCode >= 400) {
+      logger.error(`${req.method} ${req.originalUrl} failed with status ${statusCode}`, logData);
+    } else {
+      logger.info(`${req.method} ${req.originalUrl} completed in ${duration}ms`, logData);
     }
-
-    const logLevel = res.statusCode >= 400 ? 'error' : 'http';
-    logger[logLevel](
-      `${req.method} ${req.originalUrl || req.url} - ${
-        res.statusCode
-      } - ${duration}ms`,
-      logData
-    );
-
-    res.send = originalSend;
-    return originalSend.call(this, data);
-  };
+  });
 
   next();
 };

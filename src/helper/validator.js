@@ -90,7 +90,63 @@ function isReturnDateValid(returnDate, deliveryDate) {
   };
 }
 
+const mailValidation = (mail) => {
+  try {
+    if (!mail) {
+      return {
+        isValid: false,
+        message: "Mail is required",
+      };
+    }
+    const mailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!mailRegex.test(mail)) {
+      return {
+        isValid: false,
+        message: "Invalid mail format",
+      };
+    }
+    return {
+      isValid: true,
+      message: "Mail is valid",
+    };
+  } catch (error) {
+    return {
+      isValid: false,
+      message: "Invalid mail format",
+    };
+  }
+}
+
+const passwordValidation = (password) => {
+  try {
+    if (!password) {
+      return {
+        isValid: false,
+        message: "Password is required"
+      };
+    }
+    const passwordRegx = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegx.test(password)) {
+      return {
+        isValid: false,
+        message: "Invalid password format"
+      };
+    }
+    return {
+      isValid: true,
+      message: "Password is valid"
+    };
+  } catch (error) {
+    return {
+      isValid: false,
+      message: "Invalid password format"
+    };
+  }
+}
+
 module.exports = {
   isDeliveryDateValid,
   isReturnDateValid,
+  mailValidation,
+  passwordValidation,
 };

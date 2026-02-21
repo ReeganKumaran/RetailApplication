@@ -170,7 +170,7 @@ async function login(req, res) {
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET || "default_secret",
-      { expiresIn: "24h" }
+      { expiresIn: "7d" }
     );
     res.cookie("token", token, {
       httpOnly: true,
