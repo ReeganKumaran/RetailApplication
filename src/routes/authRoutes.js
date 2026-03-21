@@ -9,6 +9,5 @@ router.post("/login", login);
 router.post("/forgot-password", forgotPassword)
 router.post("/reset-password", resetPassword)
 
-resetPassword
 module.exports = router;
 

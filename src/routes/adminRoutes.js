@@ -1,9 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { createAdmin, adminLogin } = require("../controllers/adminController");
-const { isAdmin } = require("../middlewares/isAdmin");
 
-router.post("/admin/create", isAdmin, createAdmin);
-router.post("/admin/login", isAdmin, adminLogin);
+router.post("/admin/create", createAdmin);
+router.post("/admin/login", adminLogin);
 
 module.exports = router;    

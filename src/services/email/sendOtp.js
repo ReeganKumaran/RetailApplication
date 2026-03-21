@@ -7,7 +7,6 @@ const OAuth2 = google.auth.OAuth2;
 
 async function sendOtpEmail(to, otp, actionUrl) {
   const appName = process.env.APP_NAME || "SRK";
-
   // Gmail credentials from environment
   const GMAIL_USER = process.env.GMAIL_USER || process.env.FROM_EMAIL;
   const GMAIL_CLIENT_ID = process.env.GMAIL_CLIENT_ID;

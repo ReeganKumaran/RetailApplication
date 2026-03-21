@@ -1,11 +1,12 @@
 const Admin = require("../models/adminModel");
 const { mailValidation, passwordValidation } = require("../helper/validator");
 const jwt = require("jsonwebtoken");
+const { logger } = require("../helper/logger");
 
 const createAdmin = async (req, res) => {
     try {
         const { email, password, secret } = req.body;
-
+        logger.info("Create Admin")
         if (!email || !password || !secret) {
             return res.status(400).json({
                 success: false,

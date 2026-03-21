@@ -4,7 +4,7 @@ const connectDB = require("./config/db");
 const { logger } = require("./helper/logger");
 const PORT = process.env.PORT || 5000;
 // Use 0.0.0.0 in production (Render) and localhost in development
-const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '0.0.0.0';
+const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
 
 // Handle uncaught exceptions
 process.on("uncaughtException", (err) => {
